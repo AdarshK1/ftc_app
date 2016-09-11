@@ -86,7 +86,7 @@ import java.util.List;
 
 @Autonomous(name="Concept: Vuforia Navigation", group ="Concept")
 //@Disabled
-public class VuforiaNavigation extends LinearOpMode {
+public class VuforiaHelper{
 
     public static final String TAG = "Vuforia Sample";
 
@@ -98,7 +98,13 @@ public class VuforiaNavigation extends LinearOpMode {
      */
     VuforiaLocalizer vuforia;
 
-    @Override public void runOpMode() throws InterruptedException {
+    enum states {
+
+    };
+
+    public VuforiaHelper() {}
+
+    public void runOpMode() throws InterruptedException {
 
         /**
          * Start up Vuforia, telling it the id of the view that we wish to use as the parent for
@@ -124,7 +130,6 @@ public class VuforiaNavigation extends LinearOpMode {
          * {@link Parameters} instance with which you initialize Vuforia.
          */
 
-
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
         parameters.vuforiaLicenseKey = "AV/at7D/////AAAAGeh38frwBEGUke6F4wbsl2eI/QsNUvPFSZZGsy3+2Tifa5qSfnCh93gmS0KSfS526VeacacNr5M3kk64htoLkR0k4nIyccwt4vAvID76fniTyv5ykj7AFVdPdm3HRf8dn4Kd/MYmsVCnoKeklJvUlPkRBf6W1vBa63dF75Fc8H15e9+s5q3PHaz/jrrdzVaXm4yZB0f/vBmsA1kw8ERWrPhD1ZYP4T2mpzpRAQvxNTBBc9yNzSQ8kbEm6a0SN8qviw8EQofAzrtL5iwlF8V0e21Ldjn5SCh9qRcn0LBz6olZYHU+yjPB6qlabBFpM76eEUgUMeE8CiyTVK0SkB006QJKSHyvMQQd7+ds+LMztKoe";
         parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
@@ -138,6 +143,7 @@ public class VuforiaNavigation extends LinearOpMode {
          * example "StonesAndChips", datasets can be found in in this project in the
          * documentation directory.
          */
+
         VuforiaTrackables beaconVisionTargets = this.vuforia.loadTrackablesFromAsset("FTC_2016-17");
         VuforiaTrackable wheelTarget = beaconVisionTargets.get(0);
         wheelTarget.setName("WheelTarget");  // Wheels
@@ -156,6 +162,7 @@ public class VuforiaNavigation extends LinearOpMode {
          * You don't *have to* use mm here, but the units here and the units used in the XML
          * target configuration files *must* correspond for the math to work out correctly.
          */
+
         float mmPerInch        = 25.4f;
         float mmBotWidth       = 18 * mmPerInch;            // ... or whatever is right for your robot
         float mmFTCFieldWidth  = (12*12 - 2) * mmPerInch;   // the FTC field is ~11'10" center-to-center of the glass panels
@@ -216,6 +223,7 @@ public class VuforiaNavigation extends LinearOpMode {
          * - Then we rotate it  90 around the field's Z access to face it away from the audience.
          * - Finally, we translate it back along the X axis towards the red audience wall.
          */
+
         OpenGLMatrix redTargetLocationOnField = OpenGLMatrix
                 /* Then we translate the target off to the RED WALL. Our translation here
                 is a negative translation in X.*/
@@ -232,6 +240,7 @@ public class VuforiaNavigation extends LinearOpMode {
         * - First we rotate it 90 around the field's X axis to flip it upright
         * - Finally, we translate it along the Y axis towards the blue audience wall.
         */
+
         OpenGLMatrix blueTargetLocationOnField = OpenGLMatrix
                 /* Then we translate the target off to the Blue Audience wall.
                 Our translation here is a positive translation in Y.*/
@@ -255,6 +264,7 @@ public class VuforiaNavigation extends LinearOpMode {
          * axis towards the origin. A positive rotation about Z (ie: a rotation parallel to the the X-Y
          * plane) is then CCW, as one would normally expect from the usual classic 2D geometry.
          */
+
         OpenGLMatrix phoneLocationOnRobot = OpenGLMatrix
                 .translation(mmBotWidth/2,0,0)
                 .multiplied(Orientation.getRotationMatrix(
@@ -267,6 +277,7 @@ public class VuforiaNavigation extends LinearOpMode {
          * listener is a {@link VuforiaTrackableDefaultListener} and can so safely cast because
          * we have not ourselves installed a listener of a different type.
          */
+
         ((VuforiaTrackableDefaultListener)wheelTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
         ((VuforiaTrackableDefaultListener)toolTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
 
@@ -290,14 +301,14 @@ public class VuforiaNavigation extends LinearOpMode {
          */
 
         /** Wait for the game to begin */
-        telemetry.addData(">", "Press Play to start tracking");
-        telemetry.update();
-        waitForStart();
+//        telemetry.addData(">", "Press Play to start tracking");
+//        telemetry.update();
+//        waitForStart();
 
         /** Start tracking the data sets we care about. */
         beaconVisionTargets.activate();
 
-        while (opModeIsActive()) {
+//        while (opModeIsActive()) {
 
             for (VuforiaTrackable trackable : allTrackables) {
                 /**
@@ -305,7 +316,7 @@ public class VuforiaNavigation extends LinearOpMode {
                  * the last time that call was made, or if the trackable is not currently visible.
                  * getRobotLocation() will return null if the trackable is not currently visible.
                  */
-                telemetry.addData(trackable.getName(), ((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible() ? "Visible" : "Not Visible");    //
+//                telemetry.addData(trackable.getName(), ((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible() ? "Visible" : "Not Visible");    //
 
                 OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
                 if (robotLocationTransform != null) {
@@ -315,15 +326,15 @@ public class VuforiaNavigation extends LinearOpMode {
             /**
              * Provide feedback as to where the robot was last located (if we know).
              */
-            if (lastLocation != null) {
-                //  RobotLog.vv(TAG, "robot=%s", format(lastLocation));
-                telemetry.addData("Pos", format(lastLocation));
-            } else {
-                telemetry.addData("Pos", "Unknown");
-            }
-            telemetry.update();
-            idle();
-        }
+//            if (lastLocation != null) {
+//                //  RobotLog.vv(TAG, "robot=%s", format(lastLocation));
+////                telemetry.addData("Pos", format(lastLocation));
+//            } else {
+////                telemetry.addData("Pos", "Unknown");
+//            }
+//            telemetry.update();
+//            idle();
+//        }
     }
 
     /**

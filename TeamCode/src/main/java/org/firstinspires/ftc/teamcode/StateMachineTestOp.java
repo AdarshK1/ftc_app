@@ -41,8 +41,8 @@ public class StateMachineTestOp {
 
     public static void main(String[] args) {
         SensorObj[] arr = new SensorObj[1];
-        arr[0] = new LightSensorObj();
-        HolonomicChassis holonomicChassis = new HolonomicChassis(arr);
+//        arr[0] = new LightSensorObj();
+//        HolonomicChassis holonomicChassis = new HolonomicChassis(arr);
 
     }
 }

@@ -8,3 +8,9 @@ dependencies {
     compile (name:'WirelessP2p-release', ext:'aar')
     compile files('libs/state-machine-framework-0.1.5.jar')
 }
+
+repositories {
+    flatDir {
+        dirs 'libs', '/Users/akulkarni/Documents/FTC/FTC2016/navxmxp/android/navx_ftc/src/main/java/com/kauailabs'
+    }
+}
