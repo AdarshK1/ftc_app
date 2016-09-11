@@ -123,7 +123,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * {@link Parameters} instance with which you initialize Vuforia.
          */
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
-        parameters.vuforiaLicenseKey = "ATsODcD/////AAAAAVw2lR...d45oGpdljdOh5LuFB9nDNfckoxb8COxKSFX";
+        parameters.vuforiaLicenseKey = "AV/at7D/////AAAAGeh38frwBEGUke6F4wbsl2eI/QsNUvPFSZZGsy3+2Tifa5qSfnCh93gmS0KSfS526VeacacNr5M3kk64htoLkR0k4nIyccwt4vAvID76fniTyv5ykj7AFVdPdm3HRf8dn4Kd/MYmsVCnoKeklJvUlPkRBf6W1vBa63dF75Fc8H15e9+s5q3PHaz/jrrdzVaXm4yZB0f/vBmsA1kw8ERWrPhD1ZYP4T2mpzpRAQvxNTBBc9yNzSQ8kbEm6a0SN8qviw8EQofAzrtL5iwlF8V0e21Ldjn5SCh9qRcn0LBz6olZYHU+yjPB6qlabBFpM76eEUgUMeE8CiyTVK0SkB006QJKSHyvMQQd7+ds+LMztKoe";
         parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
         this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
 
@@ -135,16 +135,16 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * example "StonesAndChips", datasets can be found in in this project in the
          * documentation directory.
          */
-        VuforiaTrackables stonesAndChips = this.vuforia.loadTrackablesFromAsset("StonesAndChips");
-        VuforiaTrackable redTarget = stonesAndChips.get(0);
-        redTarget.setName("RedTarget");  // Stones
+        VuforiaTrackables beaconVisionTargets = this.vuforia.loadTrackablesFromAsset("FTC_2016-17");
+        VuforiaTrackable wheelTarget = beaconVisionTargets.get(0);
+        wheelTarget.setName("WheelTarget");  // Wheels
 
-        VuforiaTrackable blueTarget  = stonesAndChips.get(1);
-        blueTarget.setName("BlueTarget");  // Chips
+        VuforiaTrackable toolTarget  = beaconVisionTargets.get(1);
+        toolTarget.setName("ToolTarget");  // Tools
 
         /** For convenience, gather together all the trackable objects in one easily-iterable collection */
         List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
-        allTrackables.addAll(stonesAndChips);
+        allTrackables.addAll(beaconVisionTargets);
 
         /**
          * We use units of mm here because that's the recommended units of measurement for the
@@ -221,7 +221,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
                         AngleUnit.DEGREES, 90, 90, 0));
-        redTarget.setLocation(redTargetLocationOnField);
+        wheelTarget.setLocation(redTargetLocationOnField);
         RobotLog.ii(TAG, "Red Target=%s", format(redTargetLocationOnField));
 
        /*
@@ -237,7 +237,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
                         AngleUnit.DEGREES, 90, 0, 0));
-        blueTarget.setLocation(blueTargetLocationOnField);
+        toolTarget.setLocation(blueTargetLocationOnField);
         RobotLog.ii(TAG, "Blue Target=%s", format(blueTargetLocationOnField));
 
         /**
@@ -264,8 +264,8 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * listener is a {@link VuforiaTrackableDefaultListener} and can so safely cast because
          * we have not ourselves installed a listener of a different type.
          */
-        ((VuforiaTrackableDefaultListener)redTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-        ((VuforiaTrackableDefaultListener)blueTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener)wheelTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener)toolTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
 
         /**
          * A brief tutorial: here's how all the math is going to work:
@@ -292,7 +292,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         waitForStart();
 
         /** Start tracking the data sets we care about. */
-        stonesAndChips.activate();
+        beaconVisionTargets.activate();
 
         while (opModeIsActive()) {
 
