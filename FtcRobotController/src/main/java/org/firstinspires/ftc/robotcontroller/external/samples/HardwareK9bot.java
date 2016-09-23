@@ -66,10 +66,10 @@ public class HardwareK9bot
         rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Define and initialize ALL installed servos.
-        arm = hwMap.servo.get("arm");
-        claw = hwMap.servo.get("claw");
-        arm.setPosition(ARM_HOME);
-        claw.setPosition(CLAW_HOME);
+//        arm = hwMap.servo.get("arm");
+//        claw = hwMap.servo.get("claw");
+//        arm.setPosition(ARM_HOME);
+//        claw.setPosition(CLAW_HOME);
     }
 
     /***
