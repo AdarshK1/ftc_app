@@ -40,6 +40,13 @@ public class MechanumTeleOp extends OpMode{
         frontRightDrive = hardwareMap.dcMotor.get("frontRightDrive");
         frontLeftDrive = hardwareMap.dcMotor.get("frontLeftDrive");
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+
+        HolonomicChassis chassis = new HolonomicChassis(
+                new DcMotorObj(backRightDrive),
+                new DcMotorObj(backLeftDrive),
+                new DcMotorObj(frontRightDrive),
+                new DcMotorObj(frontLeftDrive)
+        );
     }
 
     @Override
@@ -50,10 +57,11 @@ public class MechanumTeleOp extends OpMode{
         // direction: left_stick_x ranges from -1 to 1, where -1 is full left
         // and 1 is full right
 
-        float left = -gamepad1.left_stick_y;
-        float right = -gamepad1.right_stick_y;
-        telemetry.addData("right data", right );
-        telemetry.addData("left data", left );
+        float lefty = -gamepad1.left_stick_y;
+        float righty = -gamepad1.right_stick_y;
+        float leftx = -gamepad1.left_stick_x;
+        float rightx = -gamepad1.right_stick_x;
+
 
         // write the values to the motors
 
@@ -70,6 +78,7 @@ public class MechanumTeleOp extends OpMode{
             backRightDrive.setPower((gamepad1.right_stick_x) / 2);
             backLeftDrive.setPower((gamepad1.right_stick_x) / 2);
         }
+
         else {
             frontRightDrive.setPower(0);
             frontLeftDrive.setPower(0);
