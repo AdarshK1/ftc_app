@@ -69,25 +69,22 @@ public class HolonomicChassis {
     }
 
     public void move(double rightx, double righty, double leftx, double lefty) {
-        if( Math.abs(gamepad1.left_stick_x) > 0 || Math.abs(gamepad1.left_stick_y) > 0) {
-            fr.setPower((gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
-            frontLeftDrive.setPower((-gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
-            backRightDrive.setPower((-gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
-            backLeftDrive.setPower((gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
+        if( Math.abs(leftx) > 0 || Math.abs(lefty) > 0) {
+            fr.setPower((leftx - lefty) / 2);
+            fl.setPower((-leftx - lefty) / 2);
+            br.setPower((-leftx - lefty) / 2);
+            bl.setPower((leftx - lefty) / 2);
         }
 
-        else if (Math.abs(gamepad1.right_stick_x) > 0) {
-            frontRightDrive.setPower((gamepad1.right_stick_x) / 2);
-            frontLeftDrive.setPower((gamepad1.right_stick_x) / 2);
-            backRightDrive.setPower((gamepad1.right_stick_x) / 2);
-            backLeftDrive.setPower((gamepad1.right_stick_x) / 2);
+        else if (Math.abs(rightx) > 0) {
+            fr.setPower((rightx) / 2);
+            fr.setPower((rightx) / 2);
+            br.setPower((rightx) / 2);
+            bl.setPower((rightx) / 2);
         }
 
         else {
-            frontRightDrive.setPower(0);
-            frontLeftDrive.setPower(0);
-            backRightDrive.setPower(0);
-            backLeftDrive.setPower(0);
+            stopAll();
         }
     }
 
