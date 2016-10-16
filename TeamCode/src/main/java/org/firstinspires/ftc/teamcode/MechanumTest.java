@@ -17,11 +17,8 @@ public class MechanumTest extends OpMode{
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
-
-    int initialize = 0;
-
-    int i = 0;
-    double pos;
+    DcMotor spinner;
+    DcMotor lift;
 
     /**
      * Constructor
@@ -45,6 +42,9 @@ public class MechanumTest extends OpMode{
         frontRightDrive = hardwareMap.dcMotor.get("frontRightDrive");
         frontLeftDrive = hardwareMap.dcMotor.get("frontLeftDrive");
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+
+        spinner = hardwareMap.dcMotor.get("spinner");
+        lift = hardwareMap.dcMotor.get("lift");
     }
 
     @Override
@@ -80,6 +80,26 @@ public class MechanumTest extends OpMode{
             frontLeftDrive.setPower(0);
             backRightDrive.setPower(0);
             backLeftDrive.setPower(0);
+        }
+
+        if (gamepad1.a){
+            spinner.setPower(1);
+        }
+        else if (gamepad1.b){
+            spinner.setPower(-1);
+        }
+        else {
+            spinner.setPower(0);
+        }
+
+        if (gamepad1.x){
+            lift.setPower(0.75);
+        }
+        else  if (gamepad1.y){
+            lift.setPower(-0.75);
+        }
+        else {
+            lift.setPower(0);
         }
     }
 
