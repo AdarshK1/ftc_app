@@ -68,7 +68,7 @@ public class PushbotAutoDriveToLine_Linear extends LinearOpMode {
     // OpticalDistanceSensor   lightSensor;   // Alternative MR ODS sensor
 
     static final double     WHITE_THRESHOLD = 0.2;  // spans between 0.1 - 0.5 from dark to light
-    static final double     APPROACH_SPEED  = 0.5;
+    static final double     APPROACH_SPEED  = 0.7;
 
     @Override
     public void runOpMode() throws InterruptedException {
