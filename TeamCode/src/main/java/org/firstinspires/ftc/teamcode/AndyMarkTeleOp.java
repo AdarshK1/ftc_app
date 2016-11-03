@@ -1,11 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @TeleOp(name="AndymarkTeleOp", group="TeamCode")
 public class AndyMarkTeleOp extends OpMode{
@@ -20,6 +24,8 @@ public class AndyMarkTeleOp extends OpMode{
     DcMotor shooter;
     Servo tilt;
     Servo push;
+    OpticalDistanceSensor ods;
+    ModernRoboticsI2cRangeSensor range;
 
 
     int initialize = 0;
@@ -58,6 +64,9 @@ public class AndyMarkTeleOp extends OpMode{
         shooter.setDirection(DcMotor.Direction.REVERSE);
         push = hardwareMap.servo.get("push");
         push.setPosition(0);
+
+        ods = hardwareMap.opticalDistanceSensor.get("ods");
+        range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "range");
 
     }
 
@@ -142,6 +151,9 @@ public class AndyMarkTeleOp extends OpMode{
         }
 
         telemetry.addData("position: ", tilt.getPosition());
+        telemetry.addData("Raw",    ods.getRawLightDetected());
+        telemetry.addData("Normal", ods.getLightDetected());
+        telemetry.addData("Range", range.getDistance(DistanceUnit.CM));
     }
 
 	/*
