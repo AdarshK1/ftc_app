@@ -7,6 +7,8 @@ dependencies {
     compile (name:'Analytics-release', ext:'aar')
     compile (name:'WirelessP2p-release', ext:'aar')
     compile files('libs/state-machine-framework-0.1.5.jar')
+    compile project(':ftc-visionlib')
+    compile project(':opencv-java')
 }
 
 repositories {

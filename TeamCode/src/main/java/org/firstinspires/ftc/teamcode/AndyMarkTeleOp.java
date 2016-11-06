@@ -23,6 +23,7 @@ public class AndyMarkTeleOp extends OpMode{
     DcMotor lift;
     DcMotor shooter;
     Servo tilt;
+    Servo flip;
     Servo push;
     OpticalDistanceSensor ods;
     ModernRoboticsI2cRangeSensor range;
@@ -60,10 +61,13 @@ public class AndyMarkTeleOp extends OpMode{
         spinnerLeft = hardwareMap.dcMotor.get("leftSpinner");
         lift = hardwareMap.dcMotor.get("lift");
         tilt = hardwareMap.servo.get("tilt");
+        tilt.setPosition(Servo.MAX_POSITION);
+        flip = hardwareMap.servo.get("flip");
+        flip.setPosition(Servo.MAX_POSITION-0.2);
         shooter = hardwareMap.dcMotor.get("shooter");
         shooter.setDirection(DcMotor.Direction.REVERSE);
         push = hardwareMap.servo.get("push");
-        push.setPosition(0);
+        push.setPosition(Servo.MAX_POSITION);
 
         ods = hardwareMap.opticalDistanceSensor.get("ods");
         range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "range");
@@ -130,28 +134,30 @@ public class AndyMarkTeleOp extends OpMode{
         }
 
         if (gamepad1.dpad_up){
-            if (tilt.getPosition() > 0.5) {
-                tilt.setPosition(tilt.getPosition() - 0.02);
+            if (tilt.getPosition() > 0.2) {
+                tilt.setPosition(tilt.getPosition() - 0.01);
             }
         }
         else if (gamepad1.dpad_down){
-            if (tilt.getPosition() < 0.95){
-                tilt.setPosition(tilt.getPosition() + 0.02);
+            if (tilt.getPosition() < 0.98){
+                tilt.setPosition(tilt.getPosition() + 0.01);
             }
         }
 
         if (gamepad1.dpad_left){
-            if (push.getPosition() < 0.98)
+            if (push.getPosition() < 0.98) {
                 push.setPosition(push.getPosition() + 0.01);
+            }
         }
 
         else if (gamepad1.dpad_right){
-            if (push.getPosition() > 0.02)
+            if (push.getPosition() > 0.02) {
                 push.setPosition(push.getPosition() - 0.01);
+            }
         }
 
         telemetry.addData("position: ", tilt.getPosition());
-        telemetry.addData("Raw",    ods.getRawLightDetected());
+        telemetry.addData("Raw", ods.getRawLightDetected());
         telemetry.addData("Normal", ods.getLightDetected());
         telemetry.addData("Range", range.getDistance(DistanceUnit.CM));
     }

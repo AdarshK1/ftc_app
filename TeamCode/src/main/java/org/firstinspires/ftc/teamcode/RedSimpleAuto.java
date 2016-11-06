@@ -98,6 +98,7 @@ public class RedSimpleAuto extends LinearOpMode {
     DcMotor shooter;
     Servo tilt;
     Servo push;
+    Servo flip;
     OpticalDistanceSensor ods;
     TouchSensor touch;
 
@@ -124,14 +125,14 @@ public class RedSimpleAuto extends LinearOpMode {
     private final double YAW_PID_I = 0.0;
     private final double YAW_PID_D = 0.0;
 
-    static final double     COUNTS_PER_MOTOR_REV    = 420 ;    // eg: TETRIX Motor Encoder
+    static final double     COUNTS_PER_MOTOR_REV    = 1680 ;    // eg: TETRIX Motor Encoder
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
                                                       (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double     DRIVE_SPEED             = 0.8;
+    static final double     DRIVE_SPEED             = 0.6;
     static final double     TURN_SPEED              = 0.5;
-    static final double     WHITE_THRESHOLD = 0.1;
+    static final double     WHITE_THRESHOLD = 0.08;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -152,10 +153,15 @@ public class RedSimpleAuto extends LinearOpMode {
         spinnerLeft = hardwareMap.dcMotor.get("leftSpinner");
         lift = hardwareMap.dcMotor.get("lift");
         tilt = hardwareMap.servo.get("tilt");
+        tilt.setPosition(Servo.MAX_POSITION);
         shooter = hardwareMap.dcMotor.get("shooter");
         shooter.setDirection(DcMotor.Direction.REVERSE);
         push = hardwareMap.servo.get("push");
-        push.setPosition(0);
+        push.setPosition(Servo.MAX_POSITION);
+
+        flip = hardwareMap.servo.get("flip");
+        flip.setPosition(Servo.MAX_POSITION - 0.2);
+
         ods = hardwareMap.opticalDistanceSensor.get("ods");
         ods.enableLed(true);
         range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "range");
@@ -166,7 +172,7 @@ public class RedSimpleAuto extends LinearOpMode {
                 AHRS.DeviceDataType.kProcessedData);
 
 
-
+        navx_device.zeroYaw();
         /* If possible, use encoders when driving, as it results in more */
         /* predicatable drive system response.                           */
 //        leftMotor.setChannelMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
@@ -176,8 +182,6 @@ public class RedSimpleAuto extends LinearOpMode {
         yawPIDController = new navXPIDController( navx_device,
                 navXPIDController.navXTimestampedDataSource.YAW);
 
-        navx_device.zeroYaw();
-
         /* Configure the PID controller */
         yawPIDController.setSetpoint(TARGET_ANGLE_DEGREES);
         yawPIDController.setContinuous(true);
@@ -186,16 +190,16 @@ public class RedSimpleAuto extends LinearOpMode {
         yawPIDController.setPID(YAW_PID_P, YAW_PID_I, YAW_PID_D);
         yawPIDController.enable(true);
 
-        // Send telemetry message to signify robot waiting;
-//        telemetry.addData("Status", "Resetting Encoders");    //
-//        telemetry.update();
-//
-//        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        idle();
-//
-//        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//         Send telemetry message to signify robot waiting;
+        telemetry.addData("Status", "Resetting Encoders");    //
+        telemetry.update();
+
+        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        idle();
+
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Send telemetry message to indicate successful Encoder reset
 //        telemetry.addData("Path0", "Starting at %7d :%7d",
@@ -203,10 +207,6 @@ public class RedSimpleAuto extends LinearOpMode {
 //                backRightDrive.getCurrentPosition());
 //        telemetry.update();
 
-//        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(com.qualcomm.ftcrobotcontroller.R.id.cameraMonitorViewId);
-//        parameters.vuforiaLicenseKey = "AV/at7D/////AAAAGeh38frwBEGUke6F4wbsl2eI/QsNUvPFSZZGsy3+2Tifa5qSfnCh93gmS0KSfS526VeacacNr5M3kk64htoLkR0k4nIyccwt4vAvID76fniTyv5ykj7AFVdPdm3HRf8dn4Kd/MYmsVCnoKeklJvUlPkRBf6W1vBa63dF75Fc8H15e9+s5q3PHaz/jrrdzVaXm4yZB0f/vBmsA1kw8ERWrPhD1ZYP4T2mpzpRAQvxNTBBc9yNzSQ8kbEm6a0SN8qviw8EQofAzrtL5iwlF8V0e21Ldjn5SCh9qRcn0LBz6olZYHU+yjPB6qlabBFpM76eEUgUMeE8CiyTVK0SkB006QJKSHyvMQQd7+ds+LMztKoe";
-//        parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
-//        this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
 
         // Wait for the game to start (driver presses PLAY)
         while (!isStarted()) {
@@ -216,25 +216,20 @@ public class RedSimpleAuto extends LinearOpMode {
             idle();
         }
 
-        setDrivePower(DRIVE_SPEED);
+        encoderDrive(DRIVE_SPEED, 12, 12, 10);
 
-        while (opModeIsActive() && (ods.getLightDetected() < WHITE_THRESHOLD)){
-            // Display the light level while we are looking for the line
-            telemetry.addData("Light Level",  ods.getLightDetected());
-            telemetry.update();
-            idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
-        }
-
-        setDrivePower(0);
+        sleep(250);
 
         final double TOTAL_RUN_TIME_SECONDS = 10.0;
         int DEVICE_TIMEOUT_MS = 500;
         navXPIDController.PIDResult yawPIDResult = new navXPIDController.PIDResult();
 
-        while ( runtime.time() < TOTAL_RUN_TIME_SECONDS ) {
+        boolean finishedTurn = false;
+        while ( runtime.time() < TOTAL_RUN_TIME_SECONDS && !finishedTurn) {
             if ( yawPIDController.waitForNewUpdate(yawPIDResult, DEVICE_TIMEOUT_MS ) ) {
                 if ( yawPIDResult.isOnTarget() ) {
                     setDrivePower(0);
+                    finishedTurn = true;
                 } else {
                     double output = yawPIDResult.getOutput();
                     telemetry.addData("PID Output", output);
@@ -267,66 +262,112 @@ public class RedSimpleAuto extends LinearOpMode {
             }
         }
 
-        while (range.getDistance(DistanceUnit.CM) > 10 ){
-            setDrivePower(DRIVE_SPEED / 2);
+        navx_device.close();
+
+        encoderDrive(DRIVE_SPEED, 18, 18, 10);
+        sleep(250);
+        flip.setPosition(Servo.MIN_POSITION);
+        sleep(500);
+        shooter.setPower(1);
+        sleep(3000);
+        shooter.setPower(0);
+        sleep(250);
+        encoderDrive(DRIVE_SPEED, 18, 18, 10);
+        sleep(250);
+
+        setDrivePower(DRIVE_SPEED);
+
+        while (opModeIsActive() && (ods.getLightDetected() < WHITE_THRESHOLD)){
+            // Display the light level while we are looking for the line
+            telemetry.addData("Light Level",  ods.getLightDetected());
+            telemetry.update();
+            idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
 
         setDrivePower(0);
 
-        // Step through each leg of the path,
-        // Note: Reverse movement is obtained by setting a negative distance (not speed)
-//        encoderDrive(DRIVE_SPEED,  24,  24, 5.0);  // S1: Forward 48 Inches with 5 Sec timeout
-//        sleep(2000);
-//        encoderDrive(DRIVE_SPEED, 24, 24, 5.0);
+        sleep(250);
 
-//        setDrivePower(DRIVE_SPEED);
-//
-//        while (opModeIsActive() && (ods.getLightDetected() < WHITE_THRESHOLD)){
-//            // Display the light level while we are looking for the line
-//            telemetry.addData("Light Level",  ods.getLightDetected());
-//            telemetry.update();
-//            idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
-//        }
-//
-//        setDrivePower(0);
-//
-//        while (opModeIsActive() && !touch.isPressed() && range.getDistance(DistanceUnit.CM) > 5){
-//            if (ods.getLightDetected() < WHITE_THRESHOLD){
-//                backRightDrive.setPower(DRIVE_SPEED);
-//                frontRightDrive.setPower(DRIVE_SPEED);
-//                backLeftDrive.setPower(0);
-//                frontLeftDrive.setPower(0);
-//            }
-//            else if (ods.getLightDetected() > WHITE_THRESHOLD){
-//                backRightDrive.setPower(0);
-//                frontRightDrive.setPower(0);
-//                backLeftDrive.setPower(DRIVE_SPEED);
-//                frontLeftDrive.setPower(DRIVE_SPEED);
-//            }
-//            else {
-//                setDrivePower(0);
-//            }
-//
-//        }
+        encoderDrive(DRIVE_SPEED, 4, 4, 5);
 
+        navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("dim"),
+                NAVX_DIM_I2C_PORT,
+                AHRS.DeviceDataType.kProcessedData);
+
+        navx_device.zeroYaw();
+
+        yawPIDController = new navXPIDController( navx_device,
+                navXPIDController.navXTimestampedDataSource.YAW);
+
+        /* Configure the PID controller */
+        yawPIDController.setSetpoint(TARGET_ANGLE_DEGREES);
+        yawPIDController.setContinuous(true);
+        yawPIDController.setOutputRange(MIN_MOTOR_OUTPUT_VALUE, MAX_MOTOR_OUTPUT_VALUE);
+        yawPIDController.setTolerance(navXPIDController.ToleranceType.ABSOLUTE, TOLERANCE_DEGREES);
+        yawPIDController.setPID(YAW_PID_P, YAW_PID_I, YAW_PID_D);
+        yawPIDController.enable(true);
+
+        yawPIDResult = new navXPIDController.PIDResult();
+        finishedTurn = false;
+        while ( runtime.time() < TOTAL_RUN_TIME_SECONDS && !finishedTurn) {
+            if ( yawPIDController.waitForNewUpdate(yawPIDResult, DEVICE_TIMEOUT_MS ) ) {
+                if ( yawPIDResult.isOnTarget() ) {
+                    setDrivePower(0);
+                    finishedTurn = true;
+                } else {
+                    double output = yawPIDResult.getOutput();
+                    telemetry.addData("PID Output", output);
+                    telemetry.update();
+                    if (Math.abs(output) < 0.4){
+                        if (output < 0){
+                            output = -0.4;
+                        }
+                        else if (output > 0) {
+                            output = 0.4;
+                        }
+                    }
+                    if ( output < 0 ) {
+                        /* Rotate Left */
+                        backLeftDrive.setPower(-output);
+                        frontLeftDrive.setPower(-output);
+                        backRightDrive.setPower(output);
+                        frontRightDrive.setPower(output);
+                    } else {
+                        /* Rotate Right */
+                        backLeftDrive.setPower(output);
+                        frontLeftDrive.setPower(output);
+                        backRightDrive.setPower(-output);
+                        frontRightDrive.setPower(-output);
+                    }
+                }
+            } else {
+			          /* A timeout occurred */
+                Log.w("navXRotateToAnglePIDOp", "Yaw PID waitForNewUpdate() TIMEOUT.");
+            }
+        }
+
+        navx_device.close();
+
+//        encoderDrive(DRIVE_SPEED, 40, 40, 10);
+        setDrivePower(-.9);
+        sleep(3000);
         setDrivePower(0);
-//        encoderDrive(TURN_SPEED, 12, -12, 4.0);  // S2: Turn Right 12 Inches with 4 Sec timeout
-//        encoderDrive(DRIVE_SPEED, -24, -24, 4.0);  // S3: Reverse 24 Inches with 4 Sec timeout
 
-        sleep(1000);     // pause for servos to move
+        backRightDrive.setPower(.9);
+        frontRightDrive.setPower(.9);
+        sleep(1000);
+        setDrivePower(0);
 
-        telemetry.addData("Path", "Complete");
-        telemetry.update();
+
+
+//        sleep(250);
+//        encoderDrive(-DRIVE_SPEED, 24, 24, 15.0);
+
+//        while (range.getDistance(DistanceUnit.CM) > 10 ){
+//            setDrivePower(DRIVE_SPEED / 2);
+//        }
+
     }
-
-    /*
-     *  Method to perfmorm a relative move, based on encoder counts.
-     *  Encoders are not reset as the move is based on the current position.
-     *  Move will stop if any of three conditions occur:
-     *  1) Move gets to the desired position
-     *  2) Move runs out of time
-     *  3) Driver stops the opmode running.
-     */
 
     public void setDrivePower(double p){
         backLeftDrive.setPower(p);
@@ -336,6 +377,14 @@ public class RedSimpleAuto extends LinearOpMode {
     }
 
 
+    /*
+     *  Method to perfmorm a relative move, based on encoder counts.
+     *  Encoders are not reset as the move is based on the current position.
+     *  Move will stop if any of three conditions occur:
+     *  1) Move gets to the desired position
+     *  2) Move runs out of time
+     *  3) Driver stops the opmode running.
+     */
     public void encoderDrive(double speed,
                              double leftInches, double rightInches,
                              double timeoutS) throws InterruptedException {
@@ -359,6 +408,8 @@ public class RedSimpleAuto extends LinearOpMode {
             runtime.reset();
             backLeftDrive.setPower(Math.abs(speed));
             backRightDrive.setPower(Math.abs(speed));
+            frontRightDrive.setPower(Math.abs(speed));
+            frontLeftDrive.setPower(Math.abs(speed));
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             while (opModeIsActive() &&
@@ -379,12 +430,14 @@ public class RedSimpleAuto extends LinearOpMode {
             // Stop all motion;
             backLeftDrive.setPower(0);
             backRightDrive.setPower(0);
+            frontRightDrive.setPower(0);
+            frontLeftDrive.setPower(0);
 
             // Turn off RUN_TO_POSITION
             backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-            //  sleep(250);   // optional pause after each move
+              sleep(250);   // optional pause after each move
         }
     }
 }
