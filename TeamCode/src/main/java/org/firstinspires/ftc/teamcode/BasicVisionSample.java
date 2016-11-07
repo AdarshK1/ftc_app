@@ -103,7 +103,7 @@ public class BasicVisionSample extends VisionOpMode {
     public void loop() {
         super.loop();
 
-        telemetry.addData("Beacon Color", beacon.getAnalysis().getColorString());
+        telemetry.addData("Beacon Cveloolor", beacon.getAnalysis().getColorString());
         telemetry.addData("Beacon Center", beacon.getAnalysis().getLocationString());
         telemetry.addData("Beacon Confidence", beacon.getAnalysis().getConfidenceString());
         telemetry.addData("Beacon Buttons", beacon.getAnalysis().getButtonString());

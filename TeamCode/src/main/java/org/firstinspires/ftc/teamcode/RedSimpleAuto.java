@@ -137,10 +137,9 @@ public class RedSimpleAuto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        /*
-         * Initialize the drive system variables.
-         * The init() method of the hardware class does all the work here
-         */
+        /************ Initialize all devices, sensors, IMU and FTCVision. ************/
+
+        /** Initialize Drive **/
         backRightDrive = hardwareMap.dcMotor.get("backRightDrive");
         backLeftDrive = hardwareMap.dcMotor.get("backLeftDrive");
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
@@ -149,19 +148,22 @@ public class RedSimpleAuto extends LinearOpMode {
         frontLeftDrive = hardwareMap.dcMotor.get("frontLeftDrive");
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
 
+        /** Initialize Lift and Spinner **/
         spinnerRight = hardwareMap.dcMotor.get("rightSpinner");
         spinnerLeft = hardwareMap.dcMotor.get("leftSpinner");
         lift = hardwareMap.dcMotor.get("lift");
+
+        /** Servos and Shooter **/
         tilt = hardwareMap.servo.get("tilt");
         tilt.setPosition(Servo.MAX_POSITION);
         shooter = hardwareMap.dcMotor.get("shooter");
         shooter.setDirection(DcMotor.Direction.REVERSE);
         push = hardwareMap.servo.get("push");
-        push.setPosition(Servo.MAX_POSITION);
-
+        push.setPosition(Servo.MIN_POSITION);
         flip = hardwareMap.servo.get("flip");
         flip.setPosition(Servo.MAX_POSITION - 0.2);
 
+        /** Initialize Sensors and IMU **/
         ods = hardwareMap.opticalDistanceSensor.get("ods");
         ods.enableLed(true);
         range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "range");
@@ -170,15 +172,9 @@ public class RedSimpleAuto extends LinearOpMode {
         navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("dim"),
                 NAVX_DIM_I2C_PORT,
                 AHRS.DeviceDataType.kProcessedData);
-
-
         navx_device.zeroYaw();
-        /* If possible, use encoders when driving, as it results in more */
-        /* predicatable drive system response.                           */
-//        leftMotor.setChannelMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-//        rightMotor.setChannelMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
 
-        /* Create a PID Controller which uses the Yaw Angle as input. */
+        /************ Create a PID Controller which uses the Yaw Angle as input ************/
         yawPIDController = new navXPIDController( navx_device,
                 navXPIDController.navXTimestampedDataSource.YAW);
 
@@ -190,7 +186,6 @@ public class RedSimpleAuto extends LinearOpMode {
         yawPIDController.setPID(YAW_PID_P, YAW_PID_I, YAW_PID_D);
         yawPIDController.enable(true);
 
-//         Send telemetry message to signify robot waiting;
         telemetry.addData("Status", "Resetting Encoders");    //
         telemetry.update();
 
@@ -201,14 +196,8 @@ public class RedSimpleAuto extends LinearOpMode {
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        // Send telemetry message to indicate successful Encoder reset
-//        telemetry.addData("Path0", "Starting at %7d :%7d",
-//                backLeftDrive.getCurrentPosition(),
-//                backRightDrive.getCurrentPosition());
-//        telemetry.update();
 
-
-        // Wait for the game to start (driver presses PLAY)
+        /************ Wait for Start. ************/
         while (!isStarted()) {
             // Display the light level while we are waiting to start
             telemetry.addData("Light Level", ods.getLightDetected());
@@ -216,10 +205,11 @@ public class RedSimpleAuto extends LinearOpMode {
             idle();
         }
 
+        /************ Drive Forward for 12 inches. ************/
         encoderDrive(DRIVE_SPEED, 12, 12, 10);
-
         sleep(250);
 
+        /************ Make a 45 degree turn counterclockwise (towards the beacon). ************/
         final double TOTAL_RUN_TIME_SECONDS = 10.0;
         int DEVICE_TIMEOUT_MS = 500;
         navXPIDController.PIDResult yawPIDResult = new navXPIDController.PIDResult();
@@ -264,32 +254,41 @@ public class RedSimpleAuto extends LinearOpMode {
 
         navx_device.close();
 
+
+        /************ Forward 18 inches. ************/
         encoderDrive(DRIVE_SPEED, 18, 18, 10);
         sleep(250);
+
+        /************  Flip out cap ball holder so ball doesn't hit it. ************/
         flip.setPosition(Servo.MIN_POSITION);
         sleep(500);
+
+        /************ Shoot! ************/
         shooter.setPower(1);
-        sleep(3000);
+        sleep(1500);
         shooter.setPower(0);
         sleep(250);
+
+        /************ Forward 18 inches again to get in vicinity of white line/beacon. ************/
         encoderDrive(DRIVE_SPEED, 18, 18, 10);
         sleep(250);
 
-        setDrivePower(DRIVE_SPEED);
 
+        /************ Forward till the white line ************/
+        setDrivePower(DRIVE_SPEED);
         while (opModeIsActive() && (ods.getLightDetected() < WHITE_THRESHOLD)){
             // Display the light level while we are looking for the line
             telemetry.addData("Light Level",  ods.getLightDetected());
             telemetry.update();
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
-
         setDrivePower(0);
-
         sleep(250);
 
+        /************ A little bit of forward offset to help line up the camera post-turn. ************/
         encoderDrive(DRIVE_SPEED, 4, 4, 5);
 
+        /************ 45 degree turn to line up camera with beacon. ************/
         navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("dim"),
                 NAVX_DIM_I2C_PORT,
                 AHRS.DeviceDataType.kProcessedData);
@@ -348,24 +347,25 @@ public class RedSimpleAuto extends LinearOpMode {
 
         navx_device.close();
 
-//        encoderDrive(DRIVE_SPEED, 40, 40, 10);
+        /************ Charge backwards to hit the cap ball! ************/
         setDrivePower(-.9);
-        sleep(3000);
+        sleep(2000);
         setDrivePower(0);
 
-        backRightDrive.setPower(.9);
-        frontRightDrive.setPower(.9);
+        setDrivePower(0.9);
+        sleep(500);
+        setDrivePower(0);
+
+        sleep(2000);
+
+        setDrivePower(-0.9);
         sleep(1000);
         setDrivePower(0);
 
-
-
-//        sleep(250);
-//        encoderDrive(-DRIVE_SPEED, 24, 24, 15.0);
-
-//        while (range.getDistance(DistanceUnit.CM) > 10 ){
-//            setDrivePower(DRIVE_SPEED / 2);
-//        }
+        backLeftDrive.setPower(-0.9);
+        frontLeftDrive.setPower(-0.9);
+        sleep(1000);
+        setDrivePower(0);
 
     }
 

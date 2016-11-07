@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -27,19 +28,18 @@ public class AndyMarkTeleOp extends OpMode{
     Servo push;
     OpticalDistanceSensor ods;
     ModernRoboticsI2cRangeSensor range;
+    DeviceInterfaceModule dim;
 
-
-    int initialize = 0;
-
-    int i = 0;
-    double pos;
+    int state = 0;
+    long time = System.currentTimeMillis();
+    boolean machine = true;
 
     /**
      * Constructor
      */
     public AndyMarkTeleOp() {
 
-    }
+}
 
     /*
      * Code to run when the op mode is initialized goes here
@@ -67,11 +67,11 @@ public class AndyMarkTeleOp extends OpMode{
         shooter = hardwareMap.dcMotor.get("shooter");
         shooter.setDirection(DcMotor.Direction.REVERSE);
         push = hardwareMap.servo.get("push");
-        push.setPosition(Servo.MAX_POSITION);
+        push.setPosition(Servo.MIN_POSITION);
 
         ods = hardwareMap.opticalDistanceSensor.get("ods");
         range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "range");
-
+        dim = hardwareMap.deviceInterfaceModule.get("dim");
     }
 
     @Override
@@ -84,76 +84,103 @@ public class AndyMarkTeleOp extends OpMode{
 
         float lefty = -gamepad1.left_stick_y;
         float righty = -gamepad1.right_stick_y;
-
-
-        // write the values to the motors
-
-        if( gamepad1.left_stick_y != 0 || gamepad1.right_stick_y != 0) {
-            frontLeftDrive.setPower(gamepad1.left_stick_y);
-            backLeftDrive.setPower(gamepad1.left_stick_y);
-            frontRightDrive.setPower(gamepad1.right_stick_y);
-            backRightDrive.setPower(gamepad1.right_stick_y);
+        if (gamepad1.start && machine == false && (System.currentTimeMillis() - time) > 500){
+                state = 1;
+                telemetry.addData("State: ", state);
+            telemetry.update();
+                machine = true;
+                time = System.currentTimeMillis();
         }
 
-        else {
-            frontRightDrive.setPower(0);
-            frontLeftDrive.setPower(0);
-            backRightDrive.setPower(0);
-            backLeftDrive.setPower(0);
+        else if (gamepad1.start == true && machine == true && (System.currentTimeMillis() - time) > 500){
+            state = 0;
+            telemetry.addData("State: ", state);
+            telemetry.update();
+            machine = false;
+            time = System.currentTimeMillis();
         }
 
-        if (gamepad1.x){
-            lift.setPower(0.75);
-        }
-        else if (gamepad1.y){
-            lift.setPower(-0.75);
-        }
-        else {
-            lift.setPower(0);
-        }
 
-        if (gamepad1.a){
-            shooter.setPower(1);
-        }
-        else{
-            shooter.setPower(0);
-        }
-
-        if (gamepad1.right_bumper){
-            spinnerRight.setPower(-1);
-            spinnerLeft.setPower(1);
-        }
-
-        else if (gamepad1.left_bumper){
-            spinnerLeft.setPower(-1);
-            spinnerRight.setPower(1);
-        }
-        else {
-            spinnerLeft.setPower(0);
-            spinnerRight.setPower(0);
-        }
-
-        if (gamepad1.dpad_up){
-            if (tilt.getPosition() > 0.2) {
-                tilt.setPosition(tilt.getPosition() - 0.01);
+        /***  state = 0 is red mode, state = 1 is blue mode  ***/
+        if (state %2 == 0) {
+            dim.setLED(1, true);
+            dim.setLED(0, false);
+            if (gamepad1.left_stick_y != 0 || gamepad1.right_stick_y != 0) {
+                frontLeftDrive.setPower(gamepad1.left_stick_y);
+                backLeftDrive.setPower(gamepad1.left_stick_y);
+                frontRightDrive.setPower(gamepad1.right_stick_y);
+                backRightDrive.setPower(gamepad1.right_stick_y);
+            } else {
+                frontRightDrive.setPower(0);
+                frontLeftDrive.setPower(0);
+                backRightDrive.setPower(0);
+                backLeftDrive.setPower(0);
             }
-        }
-        else if (gamepad1.dpad_down){
-            if (tilt.getPosition() < 0.98){
-                tilt.setPosition(tilt.getPosition() + 0.01);
-            }
-        }
 
-        if (gamepad1.dpad_left){
-            if (push.getPosition() < 0.98) {
-                push.setPosition(push.getPosition() + 0.01);
+            if (gamepad1.a) {
+                shooter.setPower(1);
+            } else if (gamepad1.b) {
+                shooter.setPower(-1);
+            } else {
+                shooter.setPower(0);
+            }
+
+            if (gamepad1.dpad_up) {
+                if (tilt.getPosition() > 0.2) {
+                    tilt.setPosition(tilt.getPosition() - 0.01);
+                }
+            } else if (gamepad1.dpad_down) {
+                if (tilt.getPosition() < 0.98) {
+                    tilt.setPosition(tilt.getPosition() + 0.01);
+                }
+            }
+
+            if (gamepad1.dpad_left) {
+                if (push.getPosition() < 0.98) {
+                    push.setPosition(push.getPosition() + 0.01);
+                }
+            } else if (gamepad1.dpad_right) {
+                if (push.getPosition() > 0.02) {
+                    push.setPosition(push.getPosition() - 0.01);
+                }
             }
         }
 
-        else if (gamepad1.dpad_right){
-            if (push.getPosition() > 0.02) {
-                push.setPosition(push.getPosition() - 0.01);
+        else if (state %2 == 1){
+            dim.setLED(1, false);
+            dim.setLED(0, true);
+
+            if (gamepad1.left_stick_y != 0 || gamepad1.right_stick_y != 0) {
+                frontLeftDrive.setPower(gamepad1.left_stick_y);
+                backLeftDrive.setPower(gamepad1.left_stick_y);
+                frontRightDrive.setPower(gamepad1.right_stick_y);
+                backRightDrive.setPower(gamepad1.right_stick_y);
+            } else {
+                frontRightDrive.setPower(0);
+                frontLeftDrive.setPower(0);
+                backRightDrive.setPower(0);
+                backLeftDrive.setPower(0);
             }
+
+            if (gamepad1.x) {
+                lift.setPower(0.75);
+            } else if (gamepad1.y) {
+                lift.setPower(-0.75);
+            } else {
+                lift.setPower(0);
+            }
+
+            if (gamepad1.right_bumper) {
+                spinnerRight.setPower(-1);
+                spinnerLeft.setPower(1);
+            } else if (gamepad1.left_bumper) {
+                spinnerLeft.setPower(-1);
+                spinnerRight.setPower(1);
+            } else {
+                spinnerLeft.setPower(0);
+                spinnerRight.setPower(0);
+            }
+
         }
 
         telemetry.addData("position: ", tilt.getPosition());
