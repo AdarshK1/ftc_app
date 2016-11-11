@@ -1,9 +1,10 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.TeleOps;
 
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
@@ -29,10 +30,12 @@ public class AndyMarkTeleOp extends OpMode{
     OpticalDistanceSensor ods;
     ModernRoboticsI2cRangeSensor range;
     DeviceInterfaceModule dim;
+    AnalogInput limit;
 
     int state = 0;
     long time = System.currentTimeMillis();
     boolean machine = true;
+    boolean limitHit = false;
 
     /**
      * Constructor
@@ -72,6 +75,9 @@ public class AndyMarkTeleOp extends OpMode{
         ods = hardwareMap.opticalDistanceSensor.get("ods");
         range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "range");
         dim = hardwareMap.deviceInterfaceModule.get("dim");
+
+        dim = hardwareMap.deviceInterfaceModule.get("dim");
+        limit = new AnalogInput(dim, 7);
     }
 
     @Override
@@ -81,6 +87,13 @@ public class AndyMarkTeleOp extends OpMode{
         // 1 is full down
         // direction: left_stick_x ranges from -1 to 1, where -1 is full left
         // and 1 is full right
+
+        if (limit.getVoltage() > 4) {
+            limitHit = true;
+        }
+        else if (limit.getVoltage() == 0){
+            limitHit = false;
+        }
 
         float lefty = -gamepad1.left_stick_y;
         float righty = -gamepad1.right_stick_y;
@@ -164,7 +177,7 @@ public class AndyMarkTeleOp extends OpMode{
 
             if (gamepad1.x) {
                 lift.setPower(0.75);
-            } else if (gamepad1.y) {
+            } else if (gamepad1.y && !limitHit) {
                 lift.setPower(-0.75);
             } else {
                 lift.setPower(0);

@@ -2,7 +2,7 @@
  * Copyright (c) 2016 Arthur Pachachura, LASA Robotics, and contributors
  * MIT licensed
  */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.VisionSamples;
 
 import org.firstinspires.ftc.teamcode.extensions.BeaconExtension;
 import org.firstinspires.ftc.teamcode.extensions.CameraControlExtension;
@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.extensions.ImageRotationExtension;
 import org.firstinspires.ftc.teamcode.extensions.VisionExtension;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
+import org.firstinspires.ftc.teamcode.VisionSamples.VisionOpModeCore;
 
 /**
  * Easy-to-use, extensible vision op mode

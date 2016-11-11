@@ -3,7 +3,7 @@
  * MIT licensed
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.VisionSamples;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import org.lasarobotics.vision.android.Cameras;
 import org.lasarobotics.vision.ftc.resq.Beacon;
 import org.lasarobotics.vision.image.Drawing;
-import org.firstinspires.ftc.teamcode.TestableVisionOpMode;
+import org.firstinspires.ftc.teamcode.VisionSamples.TestableVisionOpMode;
 import org.firstinspires.ftc.teamcode.extensions.CameraControlExtension;
 import org.lasarobotics.vision.util.ScreenOrientation;
 import org.lasarobotics.vision.util.color.Color;

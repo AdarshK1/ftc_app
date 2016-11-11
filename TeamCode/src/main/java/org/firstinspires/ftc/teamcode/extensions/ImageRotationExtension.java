@@ -12,7 +12,7 @@ import android.util.Log;
 import org.lasarobotics.vision.android.Sensors;
 import org.lasarobotics.vision.android.Util;
 import org.lasarobotics.vision.image.Transform;
-import org.firstinspires.ftc.teamcode.VisionOpMode;
+import org.firstinspires.ftc.teamcode.VisionSamples.VisionOpMode;
 import org.lasarobotics.vision.util.ScreenOrientation;
 import org.opencv.core.Mat;
 

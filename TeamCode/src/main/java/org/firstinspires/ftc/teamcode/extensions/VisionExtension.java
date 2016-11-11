@@ -4,7 +4,7 @@
  */
 package org.firstinspires.ftc.teamcode.extensions;
 
-import org.firstinspires.ftc.teamcode.VisionOpMode;
+import org.firstinspires.ftc.teamcode.VisionSamples.VisionOpMode;
 import org.opencv.core.Mat;
 
 /**

@@ -29,9 +29,12 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
-package com.qualcomm.ftcrobotcontroller.opmodes;
+package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import java.text.SimpleDateFormat;
@@ -42,13 +45,18 @@ import java.util.Date;
  * <p/>
  * Enables control of the robot via the gamepad
  */
+@TeleOp(name = "Limit Switch test", group="Robowiz")
 public class NullOp extends OpMode {
 
     private String startDate;
     private ElapsedTime runtime = new ElapsedTime();
+    AnalogInput limit;
+    DeviceInterfaceModule dim;
 
     @Override
     public void init() {
+        dim = hardwareMap.deviceInterfaceModule.get("dim");
+        limit = new AnalogInput(dim, 7);
     }
 
     /*
@@ -60,6 +68,8 @@ public class NullOp extends OpMode {
         startDate = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date());
         runtime.reset();
         telemetry.addData("Null Op Init Loop", runtime.toString());
+        telemetry.addData("Voltage: ",limit.getVoltage());
+        telemetry.update();
     }
 
     /*
@@ -70,5 +80,8 @@ public class NullOp extends OpMode {
     public void loop() {
         telemetry.addData("1 Start", "NullOp started at " + startDate);
         telemetry.addData("2 Status", "running for " + runtime.toString());
+        telemetry.addData("Voltage: ",limit.getVoltage());
+        telemetry.update();
+
     }
 }

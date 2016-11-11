@@ -9,7 +9,7 @@ package org.firstinspires.ftc.teamcode.extensions;
 import android.hardware.Camera;
 import android.util.Log;
 
-import org.firstinspires.ftc.teamcode.VisionOpMode;
+import org.firstinspires.ftc.teamcode.VisionSamples.VisionOpMode;
 import org.lasarobotics.vision.util.MathUtil;
 import org.opencv.core.Mat;
 

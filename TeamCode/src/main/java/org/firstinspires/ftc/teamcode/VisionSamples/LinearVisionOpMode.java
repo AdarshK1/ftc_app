@@ -6,11 +6,12 @@
  *
  * Thank you to Russell Coleman (LASA).
  */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.VisionSamples;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.teamcode.VisionSamples.VisionOpMode;
 import org.lasarobotics.vision.util.color.Color;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;

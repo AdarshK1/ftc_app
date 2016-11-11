@@ -1,35 +1,29 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.TeleOps;
 
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name="OutreachTeleOp", group="TeamCode")
-public class OutreachTeleOp extends OpMode{
+@TeleOp(name="MechanumTest", group="TeamCode")
+public class MechanumTest extends OpMode{
 
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
-    DcMotor spinnerRight;
-    DcMotor spinnerLeft;
+    DcMotor spinner;
     DcMotor lift;
-    DcMotor shooter;
-    Servo tilt;
-    Servo push;
-
-
-    int initialize = 0;
-
-    int i = 0;
-    double pos;
 
     /**
      * Constructor
      */
-    public OutreachTeleOp() {
+    public MechanumTest() {
 
     }
 
@@ -49,13 +43,8 @@ public class OutreachTeleOp extends OpMode{
         frontLeftDrive = hardwareMap.dcMotor.get("frontLeftDrive");
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
 
-        spinnerRight = hardwareMap.dcMotor.get("rightSpinner");
-        spinnerLeft = hardwareMap.dcMotor.get("leftSpinner");
+        spinner = hardwareMap.dcMotor.get("spinner");
         lift = hardwareMap.dcMotor.get("lift");
-        tilt = hardwareMap.servo.get("tilt");
-        shooter = hardwareMap.dcMotor.get("shooter");
-        push = hardwareMap.servo.get("push");
-
     }
 
     @Override
@@ -66,19 +55,26 @@ public class OutreachTeleOp extends OpMode{
         // direction: left_stick_x ranges from -1 to 1, where -1 is full left
         // and 1 is full right
 
-        float lefty = -gamepad1.left_stick_y;
-        float righty = -gamepad1.right_stick_y;
-
+        float left = -gamepad1.left_stick_y;
+        float right = -gamepad1.right_stick_y;
+        telemetry.addData("right data", right );
+        telemetry.addData("left data", left );
 
         // write the values to the motors
 
-        if( gamepad1.left_stick_y != 0 || gamepad1.right_stick_y != 0) {
-            frontLeftDrive.setPower(gamepad1.left_stick_y);
-            backLeftDrive.setPower(gamepad1.left_stick_y);
-            frontRightDrive.setPower(gamepad1.right_stick_y);
-            backRightDrive.setPower(gamepad1.right_stick_y);
+        if( Math.abs(gamepad1.left_stick_x) > 0 || Math.abs(gamepad1.left_stick_y) > 0) {
+            frontRightDrive.setPower((gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
+            frontLeftDrive.setPower((-gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
+            backRightDrive.setPower((-gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
+            backLeftDrive.setPower((gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
         }
 
+        else if (Math.abs(gamepad1.right_stick_x) > 0) {
+            frontRightDrive.setPower((gamepad1.right_stick_x) / 2);
+            frontLeftDrive.setPower((gamepad1.right_stick_x) / 2);
+            backRightDrive.setPower((gamepad1.right_stick_x) / 2);
+            backLeftDrive.setPower((gamepad1.right_stick_x) / 2);
+        }
         else {
             frontRightDrive.setPower(0);
             frontLeftDrive.setPower(0);
@@ -86,55 +82,25 @@ public class OutreachTeleOp extends OpMode{
             backLeftDrive.setPower(0);
         }
 
-//        if (gamepad1.x){
-//            lift.setPower(0.75);
-//        }
-//        else if (gamepad1.y){
-//            lift.setPower(-0.75);
-//        }
-//        else {
-//            lift.setPower(0);
-//        }
-//
-//        if (gamepad1.a){
-//            shooter.setPower(1);
-//        }
-//        else{
-//            shooter.setPower(0);
-//        }
-//
-//        if (gamepad1.right_bumper){
-//            spinnerRight.setPower(-1);
-//            spinnerLeft.setPower(1);
-//        }
-//
-//        else if (gamepad1.left_bumper){
-//            spinnerLeft.setPower(-1);
-//            spinnerRight.setPower(1);
-//        }
-//        else {
-//            spinnerLeft.setPower(0);
-//            spinnerRight.setPower(0);
-//        }
-//
-//        if (gamepad1.dpad_up){
-//            if (tilt.getPosition() > 0.5) {
-//                tilt.setPosition(tilt.getPosition() - 0.2);
-//            }
-//        }
-//        else if (gamepad1.dpad_down){
-//            if (tilt.getPosition() < 0.95){
-//                tilt.setPosition(tilt.getPosition() + 0.2);
-//            }
-//        }
-//
-//        if (gamepad1.dpad_left){
-//            push.setPosition(0.5);
-//        }
-//
-//        else if (gamepad1.dpad_right){
-//            push.setPosition(0.95);
-//        }
+        if (gamepad1.a){
+            spinner.setPower(1);
+        }
+        else if (gamepad1.b){
+            spinner.setPower(-1);
+        }
+        else {
+            spinner.setPower(0);
+        }
+
+        if (gamepad1.x){
+            lift.setPower(0.75);
+        }
+        else  if (gamepad1.y){
+            lift.setPower(-0.75);
+        }
+        else {
+            lift.setPower(0);
+        }
     }
 
 	/*

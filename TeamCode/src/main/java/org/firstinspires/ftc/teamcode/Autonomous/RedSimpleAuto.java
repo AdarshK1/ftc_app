@@ -30,7 +30,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Autonomous;
 
 import android.util.Log;
 
@@ -54,6 +54,8 @@ import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+
+import java.util.ArrayList;
 
 /**
  * This file illustrates the concept of driving a path based on encoder counts.
@@ -82,7 +84,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Red Simple Auto", group="Robowiz")
+@Autonomous(name="Red Auto", group="Robowiz")
 //@Disabled
 public class RedSimpleAuto extends LinearOpMode {
 
@@ -99,8 +101,9 @@ public class RedSimpleAuto extends LinearOpMode {
     Servo tilt;
     Servo push;
     Servo flip;
-    OpticalDistanceSensor ods;
-    TouchSensor touch;
+
+    ArrayList<Double> odsVal = new ArrayList<Double>();
+
 
     DcMotor br, bl, fr, fl;
 
@@ -108,6 +111,8 @@ public class RedSimpleAuto extends LinearOpMode {
     LightSensor light;
     ColorSensor color;
     UltrasonicSensor ultra;
+    OpticalDistanceSensor ods;
+    TouchSensor touch;
 
     OpenGLMatrix lastLocation = null;
 
@@ -137,7 +142,7 @@ public class RedSimpleAuto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        /************ Initialize all devices, sensors, IMU and FTCVision. ************/
+        /*********** Initialize all devices, sensors, IMU and FTCVision. ************/
 
         /** Initialize Drive **/
         backRightDrive = hardwareMap.dcMotor.get("backRightDrive");
@@ -202,11 +207,13 @@ public class RedSimpleAuto extends LinearOpMode {
             // Display the light level while we are waiting to start
             telemetry.addData("Light Level", ods.getLightDetected());
             telemetry.update();
+            odsVal.add(ods.getLightDetected());
             idle();
         }
 
         /************ Drive Forward for 12 inches. ************/
         encoderDrive(DRIVE_SPEED, 12, 12, 10);
+        odsVal.add(ods.getLightDetected());
         sleep(250);
 
         /************ Make a 45 degree turn counterclockwise (towards the beacon). ************/
@@ -224,12 +231,12 @@ public class RedSimpleAuto extends LinearOpMode {
                     double output = yawPIDResult.getOutput();
                     telemetry.addData("PID Output", output);
                     telemetry.update();
-                    if (Math.abs(output) < 0.2){
+                    if (Math.abs(output) < 0.5){
                         if (output < 0){
-                            output = -0.2;
+                            output = -0.5;
                         }
                         else if (output > 0) {
-                            output = 0.2;
+                            output = 0.5;
                         }
                     }
                     if ( output < 0 ) {
@@ -253,30 +260,45 @@ public class RedSimpleAuto extends LinearOpMode {
         }
 
         navx_device.close();
+        odsVal.add(ods.getLightDetected());
+        sleep(250);
 
 
         /************ Forward 18 inches. ************/
-        encoderDrive(DRIVE_SPEED, 18, 18, 10);
+        encoderDrive(DRIVE_SPEED, 14, 14, 10);
+        odsVal.add(ods.getLightDetected());
         sleep(250);
 
         /************  Flip out cap ball holder so ball doesn't hit it. ************/
         flip.setPosition(Servo.MIN_POSITION);
+        odsVal.add(ods.getLightDetected());
         sleep(500);
 
         /************ Shoot! ************/
         shooter.setPower(1);
         sleep(1500);
         shooter.setPower(0);
+        odsVal.add(ods.getLightDetected());
         sleep(250);
 
         /************ Forward 18 inches again to get in vicinity of white line/beacon. ************/
-        encoderDrive(DRIVE_SPEED, 18, 18, 10);
+        encoderDrive(DRIVE_SPEED, 22, 22, 10);
+        odsVal.add(ods.getLightDetected());
         sleep(250);
 
 
         /************ Forward till the white line ************/
         setDrivePower(DRIVE_SPEED);
-        while (opModeIsActive() && (ods.getLightDetected() < WHITE_THRESHOLD)){
+        double avg = 0;
+        double total = 0;
+        for (Double n :odsVal)
+        {
+            total += n;
+        }
+        avg = total/(odsVal.size());
+
+
+        while (opModeIsActive() && (ods.getLightDetected() < avg * 3)){
             // Display the light level while we are looking for the line
             telemetry.addData("Light Level",  ods.getLightDetected());
             telemetry.update();
@@ -286,7 +308,7 @@ public class RedSimpleAuto extends LinearOpMode {
         sleep(250);
 
         /************ A little bit of forward offset to help line up the camera post-turn. ************/
-        encoderDrive(DRIVE_SPEED, 4, 4, 5);
+//        encoderDrive(DRIVE_SPEED, 4, 4, 5);
 
         /************ 45 degree turn to line up camera with beacon. ************/
         navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("dim"),
@@ -317,12 +339,12 @@ public class RedSimpleAuto extends LinearOpMode {
                     double output = yawPIDResult.getOutput();
                     telemetry.addData("PID Output", output);
                     telemetry.update();
-                    if (Math.abs(output) < 0.4){
+                    if (Math.abs(output) < 0.5){
                         if (output < 0){
-                            output = -0.4;
+                            output = -0.5;
                         }
                         else if (output > 0) {
-                            output = 0.4;
+                            output = 0.5;
                         }
                     }
                     if ( output < 0 ) {
@@ -349,23 +371,23 @@ public class RedSimpleAuto extends LinearOpMode {
 
         /************ Charge backwards to hit the cap ball! ************/
         setDrivePower(-.9);
-        sleep(2000);
+        sleep(3000);
         setDrivePower(0);
 
         setDrivePower(0.9);
         sleep(500);
         setDrivePower(0);
 
-        sleep(2000);
+        sleep(1000);
 
         setDrivePower(-0.9);
         sleep(1000);
         setDrivePower(0);
 
-        backLeftDrive.setPower(-0.9);
-        frontLeftDrive.setPower(-0.9);
-        sleep(1000);
-        setDrivePower(0);
+//        backLeftDrive.setPower(-0.9);
+//        frontLeftDrive.setPower(-0.9);
+//        sleep(3000);
+//        setDrivePower(0);
 
     }
 
@@ -378,7 +400,7 @@ public class RedSimpleAuto extends LinearOpMode {
 
 
     /*
-     *  Method to perfmorm a relative move, based on encoder counts.
+     *  Method to perform a relative move, based on encoder counts.
      *  Encoders are not reset as the move is based on the current position.
      *  Move will stop if any of three conditions occur:
      *  1) Move gets to the desired position

@@ -6,7 +6,7 @@ package org.firstinspires.ftc.teamcode.extensions;
 
 import org.lasarobotics.vision.detection.objects.Rectangle;
 import org.lasarobotics.vision.ftc.resq.Beacon;
-import org.firstinspires.ftc.teamcode.VisionOpMode;
+import org.firstinspires.ftc.teamcode.VisionSamples.VisionOpMode;
 import org.lasarobotics.vision.util.ScreenOrientation;
 import org.opencv.core.Mat;
 

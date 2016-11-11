@@ -2,7 +2,7 @@
  * Copyright (c) 2016 Arthur Pachachura, LASA Robotics, and contributors
  * MIT licensed
  */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.VisionSamples;
 
 import android.app.Activity;
 import android.os.Bundle;
