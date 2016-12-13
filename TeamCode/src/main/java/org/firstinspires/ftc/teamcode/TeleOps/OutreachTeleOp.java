@@ -8,17 +8,17 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name="OutreachTeleOp", group="TeamCode")
 public class OutreachTeleOp extends OpMode{
-
-    DcMotor frontLeftDrive;
-    DcMotor frontRightDrive;
-    DcMotor backLeftDrive;
-    DcMotor backRightDrive;
-    DcMotor spinnerRight;
-    DcMotor spinnerLeft;
-    DcMotor lift;
-    DcMotor shooter;
-    Servo tilt;
-    Servo push;
+DcMotor motor;
+//    DcMotor frontLeftDrive;
+//    DcMotor frontRightDrive;
+//    DcMotor backLeftDrive;
+//    DcMotor backRightDrive;
+//    DcMotor spinnerRight;
+//    DcMotor spinnerLeft;
+//    DcMotor lift;
+//    DcMotor shooter;
+//    Servo tilt;
+//    Servo push;
 
 
     int initialize = 0;
@@ -40,21 +40,21 @@ public class OutreachTeleOp extends OpMode{
      */
     @Override
     public void init() {
-
-        backRightDrive = hardwareMap.dcMotor.get("backRightDrive");
-        backLeftDrive = hardwareMap.dcMotor.get("backLeftDrive");
-        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-
-        frontRightDrive = hardwareMap.dcMotor.get("frontRightDrive");
-        frontLeftDrive = hardwareMap.dcMotor.get("frontLeftDrive");
-        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-
-        spinnerRight = hardwareMap.dcMotor.get("rightSpinner");
-        spinnerLeft = hardwareMap.dcMotor.get("leftSpinner");
-        lift = hardwareMap.dcMotor.get("lift");
-        tilt = hardwareMap.servo.get("tilt");
-        shooter = hardwareMap.dcMotor.get("shooter");
-        push = hardwareMap.servo.get("push");
+motor = hardwareMap.dcMotor.get("motor");
+//        backRightDrive = hardwareMap.dcMotor.get("backRightDrive");
+//        backLeftDrive = hardwareMap.dcMotor.get("backLeftDrive");
+//        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+//
+//        frontRightDrive = hardwareMap.dcMotor.get("frontRightDrive");
+//        frontLeftDrive = hardwareMap.dcMotor.get("frontLeftDrive");
+//        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+//
+//        spinnerRight = hardwareMap.dcMotor.get("rightSpinner");
+//        spinnerLeft = hardwareMap.dcMotor.get("leftSpinner");
+//        lift = hardwareMap.dcMotor.get("lift");
+//        tilt = hardwareMap.servo.get("tilt");
+//        shooter = hardwareMap.dcMotor.get("shooter");
+//        push = hardwareMap.servo.get("push");
 
     }
 
@@ -67,23 +67,30 @@ public class OutreachTeleOp extends OpMode{
         // and 1 is full right
 
         float lefty = -gamepad1.left_stick_y;
-        float righty = -gamepad1.right_stick_y;
+
 
 
         // write the values to the motors
 
-        if( gamepad1.left_stick_y != 0 || gamepad1.right_stick_y != 0) {
-            frontLeftDrive.setPower(gamepad1.left_stick_y);
-            backLeftDrive.setPower(gamepad1.left_stick_y);
-            frontRightDrive.setPower(gamepad1.right_stick_y);
-            backRightDrive.setPower(gamepad1.right_stick_y);
-        }
+//        if( gamepad1.left_stick_y != 0 || gamepad1.right_stick_y != 0) {
+//            frontLeftDrive.setPower(gamepad1.left_stick_y);
+//            backLeftDrive.setPower(gamepad1.left_stick_y);
+//            frontRightDrive.setPower(gamepad1.right_stick_y);
+//            backRightDrive.setPower(gamepad1.right_stick_y);
+//        }
+//
+//        else {
+//            frontRightDrive.setPower(0);
+//            frontLeftDrive.setPower(0);
+//            backRightDrive.setPower(0);
+//            backLeftDrive.setPower(0);
+//        }
 
-        else {
-            frontRightDrive.setPower(0);
-            frontLeftDrive.setPower(0);
-            backRightDrive.setPower(0);
-            backLeftDrive.setPower(0);
+        if(gamepad1.left_stick_y !=0){
+            motor.setPower(gamepad1.left_stick_y);
+        }
+        else{
+            motor.setPower(0);
         }
 
 //        if (gamepad1.x){
@@ -145,10 +152,11 @@ public class OutreachTeleOp extends OpMode{
 
     @Override
     public void stop() {
-        frontRightDrive.setPower(0);
-        frontLeftDrive.setPower(0);
-        backRightDrive.setPower(0);
-        backLeftDrive.setPower(0);
+//        frontRightDrive.setPower(0);
+//        frontLeftDrive.setPower(0);
+//        backRightDrive.setPower(0);
+//        backLeftDrive.setPower(0);
+        motor.setPower(0);
     }
 
     /*

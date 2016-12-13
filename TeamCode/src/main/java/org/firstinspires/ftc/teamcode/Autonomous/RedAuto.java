@@ -1,11 +1,48 @@
+/*
+Copyright (c) 2016 Robert Atkinson
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted (subject to the limitations in the disclaimer below) provided that
+the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+Neither the name of Robert Atkinson nor the names of his contributors may be used to
+endorse or promote products derived from this software without specific prior
+written permission.
+
+NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
+LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESSFOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 package org.firstinspires.ftc.teamcode.Autonomous;
 
+import android.app.Activity;
 import android.util.Log;
+import android.view.View;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
+import com.qualcomm.robotcore.hardware.DigitalChannelController;
 import com.qualcomm.robotcore.hardware.LightSensor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -13,39 +50,50 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.navx.ftc.*;
+import org.firstinspires.ftc.teamcode.navx.*;
+
+import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import org.firstinspires.ftc.teamcode.navx.ftc.AHRS;
-import org.firstinspires.ftc.teamcode.navx.ftc.navXPIDController;
-import org.lasarobotics.vision.android.Cameras;
-import org.lasarobotics.vision.ftc.resq.Beacon;
-import org.lasarobotics.vision.opmode.LinearVisionOpMode;
-import org.lasarobotics.vision.opmode.extensions.CameraControlExtension;
-import org.lasarobotics.vision.util.ScreenOrientation;
-import org.opencv.core.Mat;
-import org.opencv.core.Size;
 
 import java.util.ArrayList;
 
 /**
- * Linear Vision Sample
- * <p/>
- * Use this in a typical linear op mode. A LinearVisionOpMode allows using
- * Vision Extensions, which do a lot of processing for you. Just enable the extension
- * and set its options to your preference!
- * <p/>
- * Please note that the LinearVisionOpMode is specially designed to target a particular
- * version of the FTC Robot Controller app. Changes to the app may break the LinearVisionOpMode.
- * Should this happen, open up an issue on GitHub. :)
+ * This file illustrates the concept of driving a path based on encoder counts.
+ * It uses the common Pushbot hardware class to define the drive on the robot.
+ * The code is structured as a LinearOpMode
+ *
+ * The code REQUIRES that you DO have encoders on the wheels,
+ *   otherwise you would use: PushbotAutoDriveByTime;
+ *
+ *  This code ALSO requires that the drive Motors have been configured such that a positive
+ *  power command moves them forwards, and causes the encoders to count UP.
+ *
+ *   The desired path in this example is:
+ *   - Drive forward for 48 inches
+ *   - Spin right for 12 Inches
+ *   - Drive Backwards for 24 inches
+ *   - Stop and close the claw.
+ *
+ *  The code is written using a method called: encoderDrive(speed, leftInches, rightInches, timeoutS)
+ *  that performs the actual movement.
+ *  This methods assumes that each movement is relative to the last stopping place.
+ *  There are other ways to perform encoder based moves, but this method is probably the simplest.
+ *  This code uses the RUN_TO_POSITION mode to enable the Motor controllers to generate the run profile
+ *
+ * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
+ * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
-@Autonomous(name = "Red Auto Vision", group = "Vision")
-public class LinearVisionSample extends LinearVisionOpMode {
 
-    //Frame counter
-    int frameCount = 0;
+@Autonomous(name="Red Auto", group="Robowiz")
+//@Disabled
+public class RedAuto extends LinearOpMode {
 
-    private ElapsedTime runtime = new ElapsedTime();
+    /* Declare OpMode members. */
+    private ElapsedTime     runtime = new ElapsedTime();
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
@@ -57,22 +105,15 @@ public class LinearVisionSample extends LinearVisionOpMode {
     Servo tilt;
     Servo push;
     Servo flip;
+    Servo button;
+    ColorSensor sensorRGB;
+    ModernRoboticsI2cRangeSensor range;
     OpticalDistanceSensor ods;
     TouchSensor touch;
-
-    DcMotor br, bl, fr, fl;
-
-    ModernRoboticsI2cRangeSensor range;
-    LightSensor light;
-    ColorSensor color;
-    UltrasonicSensor ultra;
-
-    OpenGLMatrix lastLocation = null;
+    DeviceInterfaceModule dim;
 
     ArrayList<Double> odsVal = new ArrayList<Double>();
-
-    VuforiaLocalizer vuforia;
-
+    static final int LED_CHANNEL = 5;
     private final int NAVX_DIM_I2C_PORT = 1;
     private AHRS navx_device;
     private navXPIDController yawPIDController;
@@ -89,17 +130,15 @@ public class LinearVisionSample extends LinearVisionOpMode {
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
-            (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double     DRIVE_SPEED             = 0.9;
+                                                      (WHEEL_DIAMETER_INCHES * 3.1415);
+    static final double     DRIVE_SPEED             = 0.6;
     static final double     TURN_SPEED              = 0.5;
     static final double     WHITE_THRESHOLD = 0.08;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        //Wait for vision to initialize - this should be the first thing you do
-        waitForVisionStart();
 
-        /************ Initialize all devices, sensors, IMU and FTCVision. ************/
+        /*********** Initialize all devices, sensors, IMU and FTCVision. ************/
 
         /** Initialize Drive **/
         backRightDrive = hardwareMap.dcMotor.get("backRightDrive");
@@ -121,9 +160,12 @@ public class LinearVisionSample extends LinearVisionOpMode {
         shooter = hardwareMap.dcMotor.get("shooter");
         shooter.setDirection(DcMotor.Direction.REVERSE);
         push = hardwareMap.servo.get("push");
-        push.setPosition(Servo.MIN_POSITION);
+        push.setPosition(Servo.MIN_POSITION + 0.1);
         flip = hardwareMap.servo.get("flip");
         flip.setPosition(Servo.MAX_POSITION - 0.2);
+
+        button = hardwareMap.servo.get("button");
+        button.setPosition(Servo.MIN_POSITION);
 
         /** Initialize Sensors and IMU **/
         ods = hardwareMap.opticalDistanceSensor.get("ods");
@@ -136,78 +178,14 @@ public class LinearVisionSample extends LinearVisionOpMode {
                 AHRS.DeviceDataType.kProcessedData);
         navx_device.zeroYaw();
 
-        /**
-         * Set the camera used for detection
-         * PRIMARY = Front-facing, larger camera
-         * SECONDARY = Screen-facing, "selfie" camera :D
-         **/
-        this.setCamera(Cameras.PRIMARY);
+        boolean bLedOn = true;
 
-        /**
-         * Set the frame size
-         * Larger = sometimes more accurate, but also much slower
-         * After this method runs, it will set the "width" and "height" of the frame
-         **/
-        this.setFrameSize(new Size(900, 900));
+        dim = hardwareMap.deviceInterfaceModule.get("dim");
+        dim.setDigitalChannelMode(LED_CHANNEL, DigitalChannelController.Mode.OUTPUT);
+        sensorRGB = hardwareMap.colorSensor.get("color");
+        dim.setDigitalChannelState(LED_CHANNEL, bLedOn);
 
-        /**
-         * Enable extensions. Use what you need.
-         * If you turn on the BEACON extension, it's best to turn on ROTATION too.
-         */
-        enableExtension(Extensions.BEACON);         //Beacon detection
-        enableExtension(Extensions.ROTATION);       //Automatic screen rotation correction
-        enableExtension(Extensions.CAMERA_CONTROL); //Manual camera control
-
-        /**
-         * Set the beacon analysis method
-         * Try them all and see what works!
-         */
-        beacon.setAnalysisMethod(Beacon.AnalysisMethod.FAST);
-
-        /**
-         * Set color tolerances
-         * 0 is default, -1 is minimum and 1 is maximum tolerance
-         */
-        beacon.setColorToleranceRed(0);
-        beacon.setColorToleranceBlue(0);
-
-        /**
-         * Set analysis boundary
-         * You should comment this to use the entire screen and uncomment only if
-         * you want faster analysis at the cost of not using the entire frame.
-         * This is also particularly useful if you know approximately where the beacon is
-         * as this will eliminate parts of the frame which may cause problems
-         * This will not work on some methods, such as COMPLEX
-         **/
-        //beacon.setAnalysisBounds(new Rectangle(new Point(width / 2, height / 2), width - 200, 200));
-
-        /**
-         * Set the rotation parameters of the screen
-         * If colors are being flipped or output appears consistently incorrect, try changing these.
-         *
-         * First, tell the extension whether you are using a secondary camera
-         * (or in some devices, a front-facing camera that reverses some colors).
-         *
-         * It's a good idea to disable global auto rotate in Android settings. You can do this
-         * by calling disableAutoRotate() or enableAutoRotate().
-         *
-         * It's also a good idea to force the phone into a specific orientation (or auto rotate) by
-         * calling either setActivityOrientationAutoRotate() or setActivityOrientationFixed(). If
-         * you don't, the camera reader may have problems reading the current orientation.
-         */
-        rotation.setIsUsingSecondaryCamera(false);
-        rotation.disableAutoRotate();
-        rotation.setActivityOrientationFixed(ScreenOrientation.LANDSCAPE_REVERSE);
-
-        /**
-         * Set camera control extension preferences
-         *
-         * Enabling manual settings will improve analysis rate and may lead to better results under
-         * tested conditions. If the environment changes, expect to change these values.
-         */
-        cameraControl.setColorTemperature(CameraControlExtension.ColorTemperature.AUTO);
-        cameraControl.setAutoExposureCompensation();
-
+        /************ Create a PID Controller which uses the Yaw Angle as input ************/
         yawPIDController = new navXPIDController( navx_device,
                 navXPIDController.navXTimestampedDataSource.YAW);
 
@@ -224,15 +202,19 @@ public class LinearVisionSample extends LinearVisionOpMode {
 
         backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
+        idle();
 
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        odsVal.add(ods.getLightDetected());
-
-        //Wait for the match to begin
-        waitForStart();
+        /************ Wait for Start. ************/
+        while (!isStarted()) {
+            // Display the light level while we are waiting to start
+            telemetry.addData("Light Level", ods.getLightDetected());
+            telemetry.update();
+            odsVal.add(ods.getLightDetected());
+            idle();
+        }
 
         /************ Drive Forward for 12 inches. ************/
         encoderDrive(DRIVE_SPEED, 12, 12, 10);
@@ -286,9 +268,11 @@ public class LinearVisionSample extends LinearVisionOpMode {
         odsVal.add(ods.getLightDetected());
         sleep(250);
 
-        /************ Forward 18 inches. ************/
-        encoderDrive(DRIVE_SPEED, 14, 14, 10);
+
+        /************ Forward 26 inches. ************/
+        encoderDrive(DRIVE_SPEED, 26, 26, 10);
         odsVal.add(ods.getLightDetected());
+        tilt.setPosition(Servo.MAX_POSITION - 0.07);
         sleep(250);
 
         /************  Flip out cap ball holder so ball doesn't hit it. ************/
@@ -303,55 +287,35 @@ public class LinearVisionSample extends LinearVisionOpMode {
         odsVal.add(ods.getLightDetected());
         sleep(250);
 
-        /************ Forward 18 inches again to get in vicinity of white line/beacon. ************/
-        encoderDrive(DRIVE_SPEED, 22, 22, 10);
+        /************ Forward 10 inches again to get in vicinity of white line/beacon. ************/
+        encoderDrive(DRIVE_SPEED, 10, 10, 10);
         odsVal.add(ods.getLightDetected());
         sleep(250);
 
 
         /************ Forward till the white line ************/
-        setDrivePower(DRIVE_SPEED / 2);
-        odsVal.add(ods.getLightDetected());
-        sleep(250);
-        while (opModeIsActive() && (ods.getLightDetected() < WHITE_THRESHOLD)){
+        setDrivePower(DRIVE_SPEED);
+        double total = 0;
+        for (Double n :odsVal)
+        {
+            total += n;
+        }
+        double avg = total/(odsVal.size());
+
+
+        while (opModeIsActive() && (ods.getLightDetected() < avg * 3)){
             // Display the light level while we are looking for the line
             telemetry.addData("Light Level",  ods.getLightDetected());
             telemetry.update();
-            waitOneFullHardwareCycle();
+            idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
         setDrivePower(0);
         sleep(250);
 
         /************ A little bit of forward offset to help line up the camera post-turn. ************/
-//        encoderDrive(DRIVE_SPEED / 2, 3, 3, 5);
+        encoderDrive(DRIVE_SPEED, 2, 2, 5);
 
-
-//        backLeftDrive.setPower(0.4);
-//        frontLeftDrive.setPower(0.4);
-//        backRightDrive.setPower(-0.4);
-//        frontRightDrive.setPower(-0.4);
-//
-//        while (opModeIsActive() && (ods.getLightDetected() < WHITE_THRESHOLD)){
-//            // Display the light level while we are looking for the line
-//            telemetry.addData("Light Level",  ods.getLightDetected());
-//            telemetry.update();
-//            waitOneFullHardwareCycle();
-//        }
-
-//        setDrivePower(0);
-//        sleep(250);
-//        setDrivePower(-0.6);
-//
-//        while (opModeIsActive() && (range.getDistance(DistanceUnit.MM) > 80)){
-//            telemetry.addData("Distance: ",  range.getDistance(DistanceUnit.MM));
-//            telemetry.update();
-//            waitOneFullHardwareCycle();
-//        }
-//
-//        setDrivePower(0);
-
-
-
+        /************ 45 degree turn to line up camera with beacon. ************/
         navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("dim"),
                 NAVX_DIM_I2C_PORT,
                 AHRS.DeviceDataType.kProcessedData);
@@ -362,7 +326,7 @@ public class LinearVisionSample extends LinearVisionOpMode {
                 navXPIDController.navXTimestampedDataSource.YAW);
 
         /* Configure the PID controller */
-        yawPIDController.setSetpoint(TARGET_ANGLE_DEGREES);
+        yawPIDController.setSetpoint(TARGET_ANGLE_DEGREES + 5);
         yawPIDController.setContinuous(true);
         yawPIDController.setOutputRange(MIN_MOTOR_OUTPUT_VALUE, MAX_MOTOR_OUTPUT_VALUE);
         yawPIDController.setTolerance(navXPIDController.ToleranceType.ABSOLUTE, TOLERANCE_DEGREES);
@@ -392,14 +356,14 @@ public class LinearVisionSample extends LinearVisionOpMode {
                         /* Rotate Left */
                         backLeftDrive.setPower(-output);
                         frontLeftDrive.setPower(-output);
-                        backRightDrive.setPower(output);
-                        frontRightDrive.setPower(output);
+//                        backRightDrive.setPower(output);
+//                        frontRightDrive.setPower(output);
                     } else {
                         /* Rotate Right */
                         backLeftDrive.setPower(output);
                         frontLeftDrive.setPower(output);
-                        backRightDrive.setPower(-output);
-                        frontRightDrive.setPower(-output);
+//                        backRightDrive.setPower(-output);
+//                        frontRightDrive.setPower(-output);
                     }
                 }
             } else {
@@ -410,48 +374,126 @@ public class LinearVisionSample extends LinearVisionOpMode {
 
         navx_device.close();
 
-        boolean detectedBeacon = false;
 
-        //Main loop
-        //Camera frames and OpenCV analysis will be delivered to this method as quickly as possible
-        //This loop will exit once the opmode is closed
-
-        int correctTimes = 0;
-        while (opModeIsActive()) {
-            //Log a few things
-            telemetry.addData("Beacon Color", beacon.getAnalysis().getColorString());
-            telemetry.addData("Beacon Center", beacon.getAnalysis().getLocationString());
-            telemetry.addData("Beacon Confidence", beacon.getAnalysis().getConfidenceString());
-            telemetry.addData("Beacon Buttons", beacon.getAnalysis().getButtonString());
-            telemetry.addData("Screen Rotation", rotation.getScreenOrientationActual());
-            telemetry.addData("Frame Rate", fps.getFPSString() + " FPS");
-            telemetry.addData("Frame Size", "Width: " + width + " Height: " + height);
-            telemetry.addData("Frame Counter", frameCount);
+        /************ Set the robot 8 cm from the wall ************/
+        if (range.getDistance(DistanceUnit.CM) > 8){
+            setDrivePower(DRIVE_SPEED /2);
+            telemetry.addData("Range", range.getDistance(DistanceUnit.CM));
             telemetry.update();
-
-//            if (beacon.getAnalysis().getConfidence() > 0.90) {
-//                correctTimes += 1;
-//            }
-            //You can access the most recent frame data and modify it here using getFrameRgba() or getFrameGray()
-            //Vision will run asynchronously (parallel) to any user code so your programs won't hang
-            //You can use hasNewFrame() to test whether vision processed a new frame
-            //Once you copy the frame, discard it immediately with discardFrame()
-            if (hasNewFrame()) {
-                //Get the frame
-                Mat rgba = getFrameRgba();
-                Mat gray = getFrameGray();
-
-                //Discard the current frame to allow for the next one to render
-                discardFrame();
-
-                //Do all of your custom frame processing here
-                //For this demo, let's just add to a frame counter
-                frameCount++;
-            }
-
-            //Wait for a hardware cycle to allow other processes to run
-            waitOneFullHardwareCycle();
         }
+        else {
+            setDrivePower(-DRIVE_SPEED /2);
+            telemetry.addData("Range", range.getDistance(DistanceUnit.CM));
+            telemetry.update();
+        }
+
+        while (opModeIsActive() && Math.abs(range.getDistance(DistanceUnit.CM) - 8) > 1){
+            telemetry.addData("Range", range.getDistance(DistanceUnit.CM));
+            telemetry.update();
+            idle();
+        }
+        setDrivePower(0);
+
+
+        /************ Move the servo/color sensor across the beacon ************/
+        button.setPosition(Servo.MAX_POSITION);
+        sleep(1000);
+        int reds = 0;
+        int blues = 0;
+        for (int x = 0; x < 4; x++){
+            button.setPosition(Servo.MAX_POSITION - (x * 0.1) );
+            if (sensorRGB.red() > sensorRGB.blue()) {
+                reds += 1;
+            }
+            if (sensorRGB.red() < sensorRGB.blue()) {
+                blues += 1;
+            }
+            sleep(500);
+        }
+
+
+        /************ Make the color decision ************/
+        if (reds > 2.5) {
+            telemetry.addData("Beacon is", "Red");
+            while (opModeIsActive() && range.getDistance(DistanceUnit.CM) > 1) {
+                setDrivePower(DRIVE_SPEED / 4);
+            }
+            setDrivePower(0);
+            sleep(250);
+        }
+        else if (blues > 2.5){
+            telemetry.addData("Beacon is", "Blue");
+            //TODO Check this position
+            button.setPosition(Servo.MIN_POSITION + 0.1);
+
+            while (opModeIsActive() && range.getDistance(DistanceUnit.CM) > 4) {
+                setDrivePower(DRIVE_SPEED / 4);
+            }
+            setDrivePower(0);
+            sleep(250);
+        }
+        else
+        {
+            //do nothing
+            telemetry.addData("Something is", "screwy");
+        }
+
+//        while(opModeIsActive()) {
+//            telemetry.update();
+//        }
+
+//        button.setPosition(Servo.MAX_POSITION);
+//        sleep(1000);
+//        int beaconLeft = 0;
+//        // beaconLeft = 1 means red
+//        // beaconLeft = 0 means blue
+//        if (sensorRGB.red() > sensorRGB.blue()) {
+//            beaconLeft = 1;
+//            sleep(500);
+//        }
+//
+//        if (beaconLeft == 0) {
+//            button.setPosition(Servo.MIN_POSITION);
+//            sleep(1000);
+//        }
+
+//        setDrivePower(DRIVE_SPEED / 2);
+//        sleep(1000);
+//        setDrivePower(0);
+
+//        while (opModeIsActive()){
+//            telemetry.addData("position: ", tilt.getPosition());
+//            telemetry.addData("Raw", ods.getRawLightDetected());
+//            telemetry.addData("Button", button.getPosition());
+//            telemetry.addData("Normal", ods.getLightDetected());
+//            telemetry.addData("Range", range.getDistance(DistanceUnit.CM));
+//            telemetry.addData("Clear", sensorRGB.alpha());
+//            telemetry.addData("Red  ", sensorRGB.red());
+//            telemetry.addData("Green", sensorRGB.green());
+//            telemetry.addData("Blue ", sensorRGB.blue());
+//            telemetry.update();
+//        }
+
+        /** Charge backwards to hit the cap ball **/
+        setDrivePower(-.9);
+        sleep(3000);
+        setDrivePower(0);
+
+        setDrivePower(0.9);
+        sleep(500);
+        setDrivePower(0);
+
+        sleep(1000);
+
+        setDrivePower(-0.9);
+        sleep(1000);
+        setDrivePower(0);
+
+        backLeftDrive.setPower(-0.9);
+        frontLeftDrive.setPower(-0.9);
+        sleep(3000);
+        setDrivePower(0);
+
     }
 
     public void setDrivePower(double p){
@@ -498,18 +540,18 @@ public class LinearVisionSample extends LinearVisionOpMode {
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             while (opModeIsActive() &&
-                    (runtime.seconds() < timeoutS) &&
-                    (backLeftDrive.isBusy() && backRightDrive.isBusy())) {
+                   (runtime.seconds() < timeoutS) &&
+                   (backLeftDrive.isBusy() && backRightDrive.isBusy())) {
 
                 // Display it for the driver.
                 telemetry.addData("Path1",  "Running to %7d :%7d", newLeftTarget,  newRightTarget);
-                telemetry.addData("Path2", "Running at %7d :%7d",
-                        backLeftDrive.getCurrentPosition(),
-                        backRightDrive.getCurrentPosition());
+                telemetry.addData("Path2",  "Running at %7d :%7d",
+                                            backLeftDrive.getCurrentPosition(),
+                                            backRightDrive.getCurrentPosition());
                 telemetry.update();
 
                 // Allow time for other processes to run.
-                waitOneFullHardwareCycle();
+                idle();
             }
 
             // Stop all motion;
@@ -522,7 +564,7 @@ public class LinearVisionSample extends LinearVisionOpMode {
             backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-            sleep(250);   // optional pause after each move
+              sleep(250);   // optional pause after each move
         }
     }
 }

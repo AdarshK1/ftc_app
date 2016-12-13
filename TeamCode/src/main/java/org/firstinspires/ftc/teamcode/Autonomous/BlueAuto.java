@@ -32,28 +32,25 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode.Autonomous;
 
+import android.app.Activity;
 import android.util.Log;
+import android.view.View;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.LightSensor;
+import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
+import com.qualcomm.robotcore.hardware.DigitalChannelController;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
-import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.navx.ftc.*;
-import org.firstinspires.ftc.teamcode.navx.*;
-
-import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
-import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.teamcode.navx.ftc.AHRS;
+import org.firstinspires.ftc.teamcode.navx.ftc.navXPIDController;
 
 import java.util.ArrayList;
 
@@ -84,9 +81,9 @@ import java.util.ArrayList;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Red Auto", group="Robowiz")
+@Autonomous(name="Blue Auto", group="Robowiz")
 //@Disabled
-public class RedSimpleAuto extends LinearOpMode {
+public class BlueAuto extends LinearOpMode {
 
     /* Declare OpMode members. */
     private ElapsedTime     runtime = new ElapsedTime();
@@ -101,23 +98,15 @@ public class RedSimpleAuto extends LinearOpMode {
     Servo tilt;
     Servo push;
     Servo flip;
-
-    ArrayList<Double> odsVal = new ArrayList<Double>();
-
-
-    DcMotor br, bl, fr, fl;
-
+    Servo button;
+    ColorSensor sensorRGB;
     ModernRoboticsI2cRangeSensor range;
-    LightSensor light;
-    ColorSensor color;
-    UltrasonicSensor ultra;
     OpticalDistanceSensor ods;
     TouchSensor touch;
+    DeviceInterfaceModule dim;
 
-    OpenGLMatrix lastLocation = null;
-
-    VuforiaLocalizer vuforia;
-
+    ArrayList<Double> odsVal = new ArrayList<Double>();
+    static final int LED_CHANNEL = 5;
     private final int NAVX_DIM_I2C_PORT = 1;
     private AHRS navx_device;
     private navXPIDController yawPIDController;
@@ -164,9 +153,12 @@ public class RedSimpleAuto extends LinearOpMode {
         shooter = hardwareMap.dcMotor.get("shooter");
         shooter.setDirection(DcMotor.Direction.REVERSE);
         push = hardwareMap.servo.get("push");
-        push.setPosition(Servo.MIN_POSITION);
+        push.setPosition(Servo.MIN_POSITION + 0.1);
         flip = hardwareMap.servo.get("flip");
         flip.setPosition(Servo.MAX_POSITION - 0.2);
+
+        button = hardwareMap.servo.get("button");
+        button.setPosition(Servo.MIN_POSITION);
 
         /** Initialize Sensors and IMU **/
         ods = hardwareMap.opticalDistanceSensor.get("ods");
@@ -178,6 +170,13 @@ public class RedSimpleAuto extends LinearOpMode {
                 NAVX_DIM_I2C_PORT,
                 AHRS.DeviceDataType.kProcessedData);
         navx_device.zeroYaw();
+
+        boolean bLedOn = true;
+
+        dim = hardwareMap.deviceInterfaceModule.get("dim");
+        dim.setDigitalChannelMode(LED_CHANNEL, DigitalChannelController.Mode.OUTPUT);
+        sensorRGB = hardwareMap.colorSensor.get("color");
+        dim.setDigitalChannelState(LED_CHANNEL, bLedOn);
 
         /************ Create a PID Controller which uses the Yaw Angle as input ************/
         yawPIDController = new navXPIDController( navx_device,
@@ -201,7 +200,6 @@ public class RedSimpleAuto extends LinearOpMode {
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-
         /************ Wait for Start. ************/
         while (!isStarted()) {
             // Display the light level while we are waiting to start
@@ -217,6 +215,7 @@ public class RedSimpleAuto extends LinearOpMode {
         sleep(250);
 
         /************ Make a 45 degree turn counterclockwise (towards the beacon). ************/
+        navx_device.zeroYaw();
         final double TOTAL_RUN_TIME_SECONDS = 10.0;
         int DEVICE_TIMEOUT_MS = 500;
         navXPIDController.PIDResult yawPIDResult = new navXPIDController.PIDResult();
@@ -264,9 +263,10 @@ public class RedSimpleAuto extends LinearOpMode {
         sleep(250);
 
 
-        /************ Forward 18 inches. ************/
-        encoderDrive(DRIVE_SPEED, 14, 14, 10);
+        /************ Forward 26 inches. ************/
+        encoderDrive(DRIVE_SPEED, 26, 26, 10);
         odsVal.add(ods.getLightDetected());
+        tilt.setPosition(Servo.MAX_POSITION - 0.03);
         sleep(250);
 
         /************  Flip out cap ball holder so ball doesn't hit it. ************/
@@ -281,21 +281,20 @@ public class RedSimpleAuto extends LinearOpMode {
         odsVal.add(ods.getLightDetected());
         sleep(250);
 
-        /************ Forward 18 inches again to get in vicinity of white line/beacon. ************/
-        encoderDrive(DRIVE_SPEED, 22, 22, 10);
+        /************ Forward 10 inches again to get in vicinity of white line/beacon. ************/
+        encoderDrive(DRIVE_SPEED, 10, 10, 10);
         odsVal.add(ods.getLightDetected());
         sleep(250);
 
 
         /************ Forward till the white line ************/
         setDrivePower(DRIVE_SPEED);
-        double avg = 0;
         double total = 0;
         for (Double n :odsVal)
         {
             total += n;
         }
-        avg = total/(odsVal.size());
+        double avg = total/(odsVal.size());
 
 
         while (opModeIsActive() && (ods.getLightDetected() < avg * 3)){
@@ -308,7 +307,7 @@ public class RedSimpleAuto extends LinearOpMode {
         sleep(250);
 
         /************ A little bit of forward offset to help line up the camera post-turn. ************/
-//        encoderDrive(DRIVE_SPEED, 4, 4, 5);
+        encoderDrive(DRIVE_SPEED, 2, 2, 5);
 
         /************ 45 degree turn to line up camera with beacon. ************/
         navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("dim"),
@@ -321,7 +320,7 @@ public class RedSimpleAuto extends LinearOpMode {
                 navXPIDController.navXTimestampedDataSource.YAW);
 
         /* Configure the PID controller */
-        yawPIDController.setSetpoint(TARGET_ANGLE_DEGREES);
+        yawPIDController.setSetpoint(TARGET_ANGLE_DEGREES - 5);
         yawPIDController.setContinuous(true);
         yawPIDController.setOutputRange(MIN_MOTOR_OUTPUT_VALUE, MAX_MOTOR_OUTPUT_VALUE);
         yawPIDController.setTolerance(navXPIDController.ToleranceType.ABSOLUTE, TOLERANCE_DEGREES);
@@ -351,14 +350,14 @@ public class RedSimpleAuto extends LinearOpMode {
                         /* Rotate Left */
                         backLeftDrive.setPower(-output);
                         frontLeftDrive.setPower(-output);
-                        backRightDrive.setPower(output);
-                        frontRightDrive.setPower(output);
+//                        backRightDrive.setPower(output);
+//                        frontRightDrive.setPower(output);
                     } else {
                         /* Rotate Right */
                         backLeftDrive.setPower(output);
                         frontLeftDrive.setPower(output);
-                        backRightDrive.setPower(-output);
-                        frontRightDrive.setPower(-output);
+//                        backRightDrive.setPower(-output);
+//                        frontRightDrive.setPower(-output);
                     }
                 }
             } else {
@@ -369,7 +368,106 @@ public class RedSimpleAuto extends LinearOpMode {
 
         navx_device.close();
 
-        /************ Charge backwards to hit the cap ball! ************/
+
+        /************ Set the robot 8 cm from the wall ************/
+        if (range.getDistance(DistanceUnit.CM) > 8){
+            setDrivePower(DRIVE_SPEED /2);
+        }
+        else {
+            setDrivePower(-DRIVE_SPEED /2);
+        }
+
+        while (opModeIsActive() && Math.abs(range.getDistance(DistanceUnit.CM) - 8) > 1){
+            telemetry.addData("Range", range.getDistance(DistanceUnit.CM));
+            telemetry.update();
+            idle();
+        }
+        setDrivePower(0);
+
+
+        /************ Move the servo/color sensor across the beacon ************/
+        button.setPosition(Servo.MAX_POSITION);
+        sleep(1000);
+        int reds = 0;
+        int blues = 0;
+        for (int x = 0; x < 4; x++){
+            button.setPosition(Servo.MAX_POSITION - (x * 0.1) );
+            if (sensorRGB.red() > sensorRGB.blue()) {
+                reds += 1;
+            }
+            if (sensorRGB.red() < sensorRGB.blue()) {
+                blues += 1;
+            }
+            sleep(500);
+        }
+
+
+        /************ Make the color decision by checking one side ************/
+        if (reds > 2.5) {
+            telemetry.addData("Beacon is", "Red");
+            //TODO Check this position
+
+            //if red detecting on the left side, move to the blue
+            button.setPosition(Servo.MIN_POSITION + 0.2);
+
+            while (opModeIsActive() && range.getDistance(DistanceUnit.CM) > 1) {
+                setDrivePower(DRIVE_SPEED / 2);
+            }
+            setDrivePower(0);
+            sleep(250);
+        }
+        else if (blues > 2.5){
+            //already on the correct side
+            telemetry.addData("Beacon is", "Blue");
+            while (opModeIsActive() && range.getDistance(DistanceUnit.CM) > 1) {
+                setDrivePower(DRIVE_SPEED / 2);
+            }
+            setDrivePower(0);
+            sleep(250);
+        }
+        else
+        {
+            //do nothing
+            telemetry.addData("Something is", "screwy");
+        }
+
+        while(opModeIsActive()) {
+            telemetry.update();
+        }
+
+//        button.setPosition(Servo.MAX_POSITION);
+//        sleep(1000);
+//        int beaconLeft = 0;
+//        // beaconLeft = 0 means blue
+//        // beaconLeft = 1 means red
+//        if (sensorRGB.red() > sensorRGB.blue()) {
+//            beaconLeft = 1;
+//            sleep(500);
+//        }
+//
+//        if (beaconLeft == 0) {
+//            button.setPosition(Servo.MIN_POSITION);
+//            sleep(1000);
+//        }
+//
+//        setDrivePower(DRIVE_SPEED / 2);
+//        sleep(1000);
+//        setDrivePower(0);
+//
+//        while (opModeIsActive()){
+//            telemetry.addData("position: ", tilt.getPosition());
+//            telemetry.addData("Raw", ods.getRawLightDetected());
+//            telemetry.addData("Button", button.getPosition());
+//            telemetry.addData("Normal", ods.getLightDetected());
+//            telemetry.addData("Range", range.getDistance(DistanceUnit.CM));
+//            telemetry.addData("Clear", sensorRGB.alpha());
+//            telemetry.addData("Red  ", sensorRGB.red());
+//            telemetry.addData("Green", sensorRGB.green());
+//            telemetry.addData("Blue ", sensorRGB.blue());
+//            telemetry.update();
+//        }
+
+        /** Charge backwards to hit the cap ball **/
         setDrivePower(-.9);
         sleep(3000);
         setDrivePower(0);
@@ -384,10 +482,10 @@ public class RedSimpleAuto extends LinearOpMode {
         sleep(1000);
         setDrivePower(0);
 
-//        backLeftDrive.setPower(-0.9);
-//        frontLeftDrive.setPower(-0.9);
-//        sleep(3000);
-//        setDrivePower(0);
+        backLeftDrive.setPower(-0.9);
+        frontLeftDrive.setPower(-0.9);
+        sleep(3000);
+        setDrivePower(0);
 
     }
 
