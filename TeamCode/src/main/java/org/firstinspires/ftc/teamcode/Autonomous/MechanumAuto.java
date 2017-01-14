@@ -10,8 +10,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name="MechanumTest", group="TeamCode")
-public class MechanumTest extends OpMode{
+@TeleOp(name="MechanumAuto", group="TeamCode")
+public class MechanumAuto extends LinearOpMode{
 
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
@@ -23,7 +23,7 @@ public class MechanumTest extends OpMode{
     /**
      * Constructor
      */
-    public MechanumTest() {
+    public MechanumAuto() {
 
     }
 
@@ -49,16 +49,20 @@ public class MechanumTest extends OpMode{
     }
 
     @Override
-    public void loop() {
+    public void runOpMode() {
 
         // throttle: left_stick_y ranges from -1 to 1, where -1 is full up, and
         // 1 is full down
         // direction: left_stick_x ranges from -1 to 1, where -1 is full left
         // and 1 is full right
 
-        double r = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
-        double robotAngle = Math.atan2(gamepad1.left_stick_y, gamepad1.left_stick_x) - Math.PI / 4;
-        double rightX = gamepad1.right_stick_x;
+        double r = 1;
+        double robotAngle =  Math.PI / 4;
+        double rightX = 0;
+
+
+
+
         final double v1 = r * Math.cos(robotAngle) + rightX;
         final double v2 = r * Math.sin(robotAngle) - rightX;
         final double v3 = r * Math.sin(robotAngle) + rightX;
@@ -68,6 +72,7 @@ public class MechanumTest extends OpMode{
         frontRightDrive.setPower(v2);
         backLeftDrive.setPower(v3);
         backRightDrive.setPower(v4);
+
 //         write the values to the motors
 
 //        if( Math.abs(gamepad1.left_stick_x) > 0 || Math.abs(gamepad1.left_stick_y) > 0) {
