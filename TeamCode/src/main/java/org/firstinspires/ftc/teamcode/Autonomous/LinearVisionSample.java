@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.LightSensor;
@@ -39,6 +40,7 @@ import java.util.ArrayList;
  * version of the FTC Robot Controller app. Changes to the app may break the LinearVisionOpMode.
  * Should this happen, open up an issue on GitHub. :)
  */
+@Disabled
 @Autonomous(name = "Red Auto Vision", group = "Vision")
 public class LinearVisionSample extends LinearVisionOpMode {
 

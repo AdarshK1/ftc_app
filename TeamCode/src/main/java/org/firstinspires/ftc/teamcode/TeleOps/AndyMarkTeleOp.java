@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.view.View;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -17,8 +18,8 @@ import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
-@TeleOp(name="AndymarkTeleOp", group="TeamCode")
+@Disabled
+@TeleOp(name="AndymarkTexleOp", group="TeamCode")
 public class AndyMarkTeleOp extends OpMode{
 
     DcMotor frontLeftDrive;
@@ -68,12 +69,12 @@ public class AndyMarkTeleOp extends OpMode{
 
 
 
-        backRightDrive = hardwareMap.dcMotor.get("backRightDrive");
-        backLeftDrive = hardwareMap.dcMotor.get("backLeftDrive");
+        backRightDrive = hardwareMap.dcMotor.get("brd");
+        backLeftDrive = hardwareMap.dcMotor.get("bld");
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
 
-        frontRightDrive = hardwareMap.dcMotor.get("frontRightDrive");
-        frontLeftDrive = hardwareMap.dcMotor.get("frontLeftDrive");
+        frontRightDrive = hardwareMap.dcMotor.get("frd");
+        frontLeftDrive = hardwareMap.dcMotor.get("fld");
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
 
         spinnerRight = hardwareMap.dcMotor.get("rightSpinner");

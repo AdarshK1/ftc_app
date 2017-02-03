@@ -38,6 +38,7 @@ import android.view.View;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -89,7 +90,7 @@ import java.util.ArrayList;
  */
 
 @Autonomous(name="Red Auto", group="Robowiz")
-//@Disabled
+@Disabled
 public class RedAuto extends LinearOpMode {
 
     /* Declare OpMode members. */

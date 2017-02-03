@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
-
+@Disabled
 @TeleOp(name="MechanumTest", group="TeamCode")
 public class MechanumTest extends OpMode{
 
@@ -35,13 +35,13 @@ public class MechanumTest extends OpMode{
     @Override
     public void init() {
 
-        backRightDrive = hardwareMap.dcMotor.get("backRightDrive");
-        backLeftDrive = hardwareMap.dcMotor.get("backLeftDrive");
+        backRightDrive = hardwareMap.dcMotor.get("brd");
+        backLeftDrive = hardwareMap.dcMotor.get("bld");
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
 
-        frontRightDrive = hardwareMap.dcMotor.get("frontRightDrive");
-        frontLeftDrive = hardwareMap.dcMotor.get("frontLeftDrive");
-//        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontRightDrive = hardwareMap.dcMotor.get("frd");
+        frontLeftDrive = hardwareMap.dcMotor.get("fld");
+//        fld.setDirection(DcMotor.Direction.REVERSE);
         frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
 
 //        spinner = hardwareMap.dcMotor.get("spinner");
@@ -71,23 +71,23 @@ public class MechanumTest extends OpMode{
 //         write the values to the motors
 
 //        if( Math.abs(gamepad1.left_stick_x) > 0 || Math.abs(gamepad1.left_stick_y) > 0) {
-//            frontRightDrive.setPower((gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
-//            frontLeftDrive.setPower((-gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
-//            backRightDrive.setPower((-gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
-//            backLeftDrive.setPower((gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
+//            frd.setPower((gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
+//            fld.setPower((-gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
+//            brd.setPower((-gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
+//            bld.setPower((gamepad1.left_stick_x - gamepad1.left_stick_y) / 2);
 //        }
 //
 //        else if (Math.abs(gamepad1.right_stick_x) > 0) {
-//            frontRightDrive.setPower((gamepad1.right_stick_x) / 2);
-//            frontLeftDrive.setPower(-(gamepad1.right_stick_x) / 2);
-//            backRightDrive.setPower((gamepad1.right_stick_x) / 2);
-//            backLeftDrive.setPower(-(gamepad1.right_stick_x) / 2);
+//            frd.setPower((gamepad1.right_stick_x) / 2);
+//            fld.setPower(-(gamepad1.right_stick_x) / 2);
+//            brd.setPower((gamepad1.right_stick_x) / 2);
+//            bld.setPower(-(gamepad1.right_stick_x) / 2);
 //        }
 //        else {
-//            frontRightDrive.setPower(0);
-//            frontLeftDrive.setPower(0);
-//            backRightDrive.setPower(0);
-//            backLeftDrive.setPower(0);
+//            frd.setPower(0);
+//            fld.setPower(0);
+//            brd.setPower(0);
+//            bld.setPower(0);
 //        }
 
 

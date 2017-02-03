@@ -1,18 +1,19 @@
 package org.firstinspires.ftc.teamcode.TeleOps;
 
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
-
+@Disabled
 @TeleOp(name="OutreachTeleOp", group="TeamCode")
 public class OutreachTeleOp extends OpMode{
 DcMotor motor;
-//    DcMotor frontLeftDrive;
-//    DcMotor frontRightDrive;
-//    DcMotor backLeftDrive;
-//    DcMotor backRightDrive;
+//    DcMotor fld;
+//    DcMotor frd;
+//    DcMotor bld;
+//    DcMotor brd;
 //    DcMotor spinnerRight;
 //    DcMotor spinnerLeft;
 //    DcMotor lift;
@@ -41,13 +42,13 @@ DcMotor motor;
     @Override
     public void init() {
 motor = hardwareMap.dcMotor.get("motor");
-//        backRightDrive = hardwareMap.dcMotor.get("backRightDrive");
-//        backLeftDrive = hardwareMap.dcMotor.get("backLeftDrive");
-//        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+//        brd = hardwareMap.dcMotor.get("brd");
+//        bld = hardwareMap.dcMotor.get("bld");
+//        bld.setDirection(DcMotor.Direction.REVERSE);
 //
-//        frontRightDrive = hardwareMap.dcMotor.get("frontRightDrive");
-//        frontLeftDrive = hardwareMap.dcMotor.get("frontLeftDrive");
-//        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+//        frd = hardwareMap.dcMotor.get("frd");
+//        fld = hardwareMap.dcMotor.get("fld");
+//        fld.setDirection(DcMotor.Direction.REVERSE);
 //
 //        spinnerRight = hardwareMap.dcMotor.get("rightSpinner");
 //        spinnerLeft = hardwareMap.dcMotor.get("leftSpinner");
@@ -73,17 +74,17 @@ motor = hardwareMap.dcMotor.get("motor");
         // write the values to the motors
 
 //        if( gamepad1.left_stick_y != 0 || gamepad1.right_stick_y != 0) {
-//            frontLeftDrive.setPower(gamepad1.left_stick_y);
-//            backLeftDrive.setPower(gamepad1.left_stick_y);
-//            frontRightDrive.setPower(gamepad1.right_stick_y);
-//            backRightDrive.setPower(gamepad1.right_stick_y);
+//            fld.setPower(gamepad1.left_stick_y);
+//            bld.setPower(gamepad1.left_stick_y);
+//            frd.setPower(gamepad1.right_stick_y);
+//            brd.setPower(gamepad1.right_stick_y);
 //        }
 //
 //        else {
-//            frontRightDrive.setPower(0);
-//            frontLeftDrive.setPower(0);
-//            backRightDrive.setPower(0);
-//            backLeftDrive.setPower(0);
+//            frd.setPower(0);
+//            fld.setPower(0);
+//            brd.setPower(0);
+//            bld.setPower(0);
 //        }
 
         if(gamepad1.left_stick_y !=0){
@@ -152,10 +153,10 @@ motor = hardwareMap.dcMotor.get("motor");
 
     @Override
     public void stop() {
-//        frontRightDrive.setPower(0);
-//        frontLeftDrive.setPower(0);
-//        backRightDrive.setPower(0);
-//        backLeftDrive.setPower(0);
+//        frd.setPower(0);
+//        fld.setPower(0);
+//        brd.setPower(0);
+//        bld.setPower(0);
         motor.setPower(0);
     }
 

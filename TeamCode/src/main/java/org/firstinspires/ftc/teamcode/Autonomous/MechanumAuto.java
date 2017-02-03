@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.TeleOps;
+package org.firstinspires.ftc.teamcode.Autonomous;
 
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -32,21 +32,21 @@ public class MechanumAuto extends LinearOpMode{
      *
      * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#init()
      */
-    @Override
-    public void init() {
-
-        backRightDrive = hardwareMap.dcMotor.get("backRightDrive");
-        backLeftDrive = hardwareMap.dcMotor.get("backLeftDrive");
-        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-
-        frontRightDrive = hardwareMap.dcMotor.get("frontRightDrive");
-        frontLeftDrive = hardwareMap.dcMotor.get("frontLeftDrive");
-//        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
-
-//        spinner = hardwareMap.dcMotor.get("spinner");
-//        lift = hardwareMap.dcMotor.get("lift");
-    }
+//    @Override
+//    public void init() {
+//
+//        backRightDrive = hardwareMap.dcMotor.get("backRightDrive");
+//        backLeftDrive = hardwareMap.dcMotor.get("backLeftDrive");
+//        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+//
+//        frontRightDrive = hardwareMap.dcMotor.get("frontRightDrive");
+//        frontLeftDrive = hardwareMap.dcMotor.get("frontLeftDrive");
+////        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+//        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
+//
+////        spinner = hardwareMap.dcMotor.get("spinner");
+////        lift = hardwareMap.dcMotor.get("lift");
+//    }
 
     @Override
     public void runOpMode() {
@@ -124,13 +124,13 @@ public class MechanumAuto extends LinearOpMode{
 	 * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#stop()
 	 */
 
-    @Override
-    public void stop() {
-        frontRightDrive.setPower(0);
-        frontLeftDrive.setPower(0);
-        backRightDrive.setPower(0);
-        backLeftDrive.setPower(0);
-    }
+//    @Override
+//    public void stop() {
+//        frontRightDrive.setPower(0);
+//        frontLeftDrive.setPower(0);
+//        backRightDrive.setPower(0);
+//        backLeftDrive.setPower(0);
+//    }
 
     /*
      * This method scales the joystick input so for low joystick values, the
