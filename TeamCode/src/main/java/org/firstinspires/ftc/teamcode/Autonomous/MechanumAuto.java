@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name="MechanumAuto", group="TeamCode")
+@Autonomous(name="MechanumAuto", group="TeamCode")
 public class MechanumAuto extends LinearOpMode{
 
     DcMotor frontLeftDrive;

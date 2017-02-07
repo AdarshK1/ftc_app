@@ -33,7 +33,10 @@ public class BlueMecanumAuto extends LinearOpMode{
     DcMotor brd;
     OpticalDistanceSensor odsRight;
     OpticalDistanceSensor odsLeft;
-    ModernRoboticsI2cRangeSensor range;
+
+    ModernRoboticsI2cRangeSensor leftRange;
+    ModernRoboticsI2cRangeSensor rightRange;
+
     ArrayList<Double> odsVal = new ArrayList<Double>();
 
     Servo flip;
@@ -59,7 +62,11 @@ public class BlueMecanumAuto extends LinearOpMode{
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
     static final double     DRIVE_SPEED             = 1;
+//    static final double     TURN_SPEED              = 0.5;
+//    static final double     WHITE_THRESHOLD = 0.08;
 
+    //    DcMotor lift;
+//    DcMotor intake;
     DcMotor shoot;
     DeviceInterfaceModule dim;
 
@@ -73,131 +80,264 @@ public class BlueMecanumAuto extends LinearOpMode{
     public void runOpMode() throws InterruptedException {
 
         /******** Initialize all devices ********/
-//        ods = hardwareMap.opticalDistanceSensor.get("ods");
-//        ods.enableLed(true);
-//        rangeBL = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rangeBL");
-//        rangeBR = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rangeBR");
-//        rangeLeft = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rangeLeft");
+        shoot = hardwareMap.dcMotor.get("shoot");
+
+        flip = hardwareMap.servo.get("flip");
+        flip.setPosition(Servo.MAX_POSITION);
+
+        chamber =(CRServoImpl) hardwareMap.crservo.get("chamber");
+        leftRange = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "leftRange");
+        rightRange = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rightRange");
+
+        navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("dim"),
+                NAVX_DIM_I2C_PORT,
+                AHRS.DeviceDataType.kProcessedData);
+        navx_device.zeroYaw();
+
+        /************ Create a PID Controller which uses the Yaw Angle as input ************/
+        yawPIDController = new navXPIDController( navx_device,
+                navXPIDController.navXTimestampedDataSource.YAW);
+
+        /* Configure the PID controller */
+        yawPIDController.setSetpoint(0);
+        yawPIDController.setContinuous(true);
+        yawPIDController.setOutputRange(MIN_MOTOR_OUTPUT_VALUE, MAX_MOTOR_OUTPUT_VALUE);
+        yawPIDController.setTolerance(navXPIDController.ToleranceType.ABSOLUTE, TOLERANCE_DEGREES);
+        yawPIDController.setPID(YAW_PID_P, YAW_PID_I, YAW_PID_D);
+        yawPIDController.enable(true);
+
+        odsLeft = hardwareMap.opticalDistanceSensor.get("odsLeft");
+        odsRight = hardwareMap.opticalDistanceSensor.get("odsRight");
+        odsLeft.enableLed(true);
+        odsRight.enableLed(true);
 
         /******** Initialize Drive *********/
         brd = hardwareMap.dcMotor.get("brd");
-        fld.setDirection(DcMotor.Direction.REVERSE);
         bld = hardwareMap.dcMotor.get("bld");
-        brd.setDirection(DcMotor.Direction.REVERSE);
-
         frd = hardwareMap.dcMotor.get("frd");
-        fld.setDirection(DcMotor.Direction.REVERSE);
         fld = hardwareMap.dcMotor.get("fld");
+        odsVal.add(odsLeft.getLightDetected());
+        odsVal.add(odsRight.getLightDetected());
+
+        bld.setDirection(DcMotor.Direction.REVERSE);
         fld.setDirection(DcMotor.Direction.REVERSE);
+
+        /******* Reset Encoders ********/
+        telemetry.addData("Status", "Resetting Encoders");    //
+        telemetry.update();
+
+        bld.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        brd.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        idle();
+
+        bld.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        brd.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         /******** Wait for Start ********/
         while (!isStarted()){
             idle();
         }
+
+        /******** Drive forward to shoot position *******/
+        encoderDrive(DRIVE_SPEED / 2, 12, 12, 10);
+        odsVal.add(odsLeft.getLightDetected());
+        odsVal.add(odsRight.getLightDetected());
+        sleep(250);
 //
-//        /******** Shoot two balls ********/
-//
-//
-//        /******** Forward until ODS is in line with white line ********/
-////        //set the directions to forward so the robot will move forward
-////        frd.setDirection(DcMotor.Direction.FORWARD);
-////        fld.setDirection(DcMotor.Direction.FORWARD);
-////        brd.setDirection(DcMotor.Direction.FORWARD);
-////        bld.setDirection(DcMotor.Direction.FORWARD);
-//
-//        //keep moving forward while the average of the two values is less than 100 cm
-////        while(opModeIsActive() && ((rangeBL.getDistance(DistanceUnit.CM) + rangeBR.getDistance(DistanceUnit.CM))/2) < 100){
-//            //move forward at .8 power
-//            frd.setPower(.8);
-//            fld.setPower(.8);
-//            brd.setPower(.8);
-//            bld.setPower(.8);
-////            sleep(5000);
-//            //telemetry
-////            telemetry.addData("Left Back Range", rangeBL.getDistance(DistanceUnit.CM));
-////            telemetry.addData("Right Back Range", rangeBR.getDistance(DistanceUnit.CM));
-//            telemetry.update();
-//            idle();
-//        }
-//
-//        //after you're 100 cm away from the back wall, stop
-////        frd.setPower(0);
-////        fld.setPower(0);
-////        brd.setPower(0);
-////        bld.setPower(0);
-//
-//        /******** Strafe horizontally towards beacon until both ODS' hit white line ********/
-//        //set the directions to left so the robot will move left
-//
-//        //keep moving left while the average of the two values is less than 10 cm
-////        while(opModeIsActive() && (rangeLeft.getDistance(DistanceUnit.CM)) < 10){
-//            //move left at .8 power
-////            frd.setPower(.8);
-////            fld.setPower(-.8);
-////            brd.setPower(-.8);
-////            bld.setPower(.8);
-////            //telemetry
-////            telemetry.addData("Range", rangeLeft.getDistance(DistanceUnit.CM));
-////            telemetry.update();
-////            idle();
-//        }
-//
-//        //after you're 10 cm away from the side wall, stop
-////        frd.setPower(0);
-////        fld.setPower(0);
-////        brd.setPower(0);
-////        bld.setPower(0);
-////
-////        /******** Strafe diagonally 3 tiles until you see the white line ********/
-////        fld.setDirection(DcMotor.Direction.REVERSE);
-////        brd.setDirection(DcMotor.Direction.REVERSE);
-////
-////        fld.setPower(1); //totally random power value?
-////        brd.setPower(.9); //again, totally rand value?
-////        frd.setPower(0);
-////        bld.setPower(0);
-////        sleep(5000);
-////
-////        double total = 0;
-////        for (Double n :odsVal)
-////        {
-////            total += n;
-////        }
-////        double avg = total/(odsVal.size());
-////
-////        while (opModeIsActive() && (ods.getLightDetected() < avg * 3)){
-////            telemetry.addData("Light Level",  ods.getLightDetected());
-////            telemetry.update();
-////            idle();
-////        }
-////
-////        frd.setPower(0);
-////        bld.setPower(0);
-////        fld.setPower(0);
-////        brd.setPower(0);
-////
-////        sleep(250);
-//
-//        /******** Follow the line/use range sensor to align with beacon *******/
-//        //two range sensors (certain distance apart)
-//        //
-//
-//        /******** Decide which color to push ********/
-//
-//        /******** Push the correct side of the beacon ********/
-//
-//        /******** Strafe back 2 tiles ********/
-//
-//        /******** Use light/range sensor to ensure aligned with beacon ********/
-//
-//        /******** Decide which color to push ********/
-//
-//        /******** Push the correct side of the beacon ********/
-//
-//        /******** Strafe backwards diagonally 3 tiles (hits cap ball) ********/
-//
-//        /******** Park on center vortex ********/
-//}
+//        /******* Flip out cap ball thing *******/
+//        flip.setPosition(Servo.MIN_POSITION);
+//        sleep(5000);
+
+        /******** Shoot two balls ********/
+        shooter(10);
+//        chamber.setPosition(Servo.MIN_POSITION);
+        chamber.setPower(1);
+        sleep(1200);
+        shooter(10);
+        odsVal.add(odsLeft.getLightDetected());
+        odsVal.add(odsRight.getLightDetected());
+
+        /******* Strafe along the ramp *******/
+        frd.setPower(-DRIVE_SPEED);
+        fld.setPower(DRIVE_SPEED);
+        brd.setPower(DRIVE_SPEED);
+        bld.setPower(-DRIVE_SPEED);
+
+        while (rightRange.getDistance(DistanceUnit.CM) > 25){
+            telemetry.addData("Range Sensor Value; ", rightRange.getDistance(DistanceUnit.CM));
+            telemetry.update();
+        }
+
+        stopMotors();
+
+        odsVal.add(odsLeft.getLightDetected());
+        odsVal.add(odsRight.getLightDetected());
+        sleep(1000);
+
+        encoderDrive(DRIVE_SPEED / 4, 2, 2, 5);
+        sleep(250);
+
+        frd.setPower(-DRIVE_SPEED);
+        fld.setPower(DRIVE_SPEED);
+        brd.setPower(DRIVE_SPEED);
+        bld.setPower(-DRIVE_SPEED);
+
+        while (rightRange.getDistance(DistanceUnit.CM) > 15){
+            telemetry.addData("Range Sensor Value; ", rightRange.getDistance(DistanceUnit.CM));
+            telemetry.update();
+        }
+
+        stopMotors();
+
+        odsVal.add(odsLeft.getLightDetected());
+        odsVal.add(odsRight.getLightDetected());
+
+        double total = 0;
+        for (Double n :odsVal)
+        {
+            total += n;
+        }
+        double avg = total/(odsVal.size());
+
+        double whiteThreshold = avg * 3;
+        boolean rightHit = false;
+        boolean leftHit = false;
+
+        frd.setPower(DRIVE_SPEED / 4);
+        fld.setPower(DRIVE_SPEED / 4);
+        brd.setPower(DRIVE_SPEED / 4);
+        bld.setPower(DRIVE_SPEED / 4);
+
+        while ((!rightHit && !leftHit) || (!rightHit && leftHit) || (rightHit && !leftHit)){
+            if (odsRight.getLightDetected() > avg){
+                frd.setPower(0);
+                brd.setPower(0);
+                rightHit = true;
+            }
+            if (odsLeft.getLightDetected() > avg){
+                fld.setPower(0);
+                bld.setPower(0);
+                leftHit = true;
+            }
+        }
+
+        stopMotors();
+
+        /******** Strafe diagonally 3 tiles until you see the white line ********/
+
+        /******** Follow the line/use range sensor to align with beacon *******/
+
+        /******** Decide which color to push ********/
+
+        /******** Push the correct side of the beacon ********/
+
+        /******** Strafe back 2 tiles ********/
+
+        /******** Use light/range sensor to ensure aligned with beacon ********/
+
+        /******** Decide which color to push ********/
+
+        /******** Push the correct side of the beacon ********/
+
+        /******** Strafe backwards diagonally 3 tiles (hits cap ball) ********/
+
+        /******** Park on center vortex ********/
+
+    }
+
+    public void stopMotors(){
+        frd.setPower(0);
+        fld.setPower(0);
+        brd.setPower(0);
+        bld.setPower(0);
+    }
+
+    public void encoderDrive(double speed,
+                             double leftInches, double rightInches,
+                             double timeoutS) throws InterruptedException {
+        int newLeftTarget;
+        int newRightTarget;
+
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+            // Determine new target position, and pass to motor controller
+            newLeftTarget = bld.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
+            newRightTarget = brd.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
+            bld.setTargetPosition(newLeftTarget);
+            brd.setTargetPosition(newRightTarget);
+
+            // Turn On RUN_TO_POSITION
+            bld.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            brd.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            bld.setPower(Math.abs(speed));
+            brd.setPower(Math.abs(speed));
+            frd.setPower(Math.abs(speed));
+            fld.setPower(Math.abs(speed));
+
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            while (opModeIsActive() &&
+                    (runtime.seconds() < timeoutS) &&
+                    (bld.isBusy() && brd.isBusy())) {
+
+                // Display it for the driver.
+                telemetry.addData("Path1",  "Running to %7d :%7d", newLeftTarget,  newRightTarget);
+                telemetry.addData("Path2",  "Running at %7d :%7d",
+                        bld.getCurrentPosition(),
+                        brd.getCurrentPosition());
+                telemetry.update();
+
+                // Allow time for other processes to run.
+                idle();
+            }
+
+            // Stop all motion;
+            bld.setPower(0);
+            brd.setPower(0);
+            frd.setPower(0);
+            fld.setPower(0);
+
+            // Turn off RUN_TO_POSITION
+            bld.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            brd.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            sleep(250);   // optional pause after each move
+        }
+    }
+
+    public void shooter(double timeoutS) throws InterruptedException {
+        int shootTarget;
+
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+            // Determine new target position, and pass to motor controller
+            shootTarget = shoot.getCurrentPosition() + (1680);
+            shoot.setTargetPosition(shootTarget);
+
+            // Turn On RUN_TO_POSITION
+            shoot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            shoot.setPower(1);
+
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            while (opModeIsActive() && (runtime.seconds() < timeoutS) && (shoot.isBusy())) {
+                idle();
+            }
+
+            // Stop all motion;
+            shoot.setPower(0);
+
+            // Turn off RUN_TO_POSITION
+            shoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            sleep(250);   // optional pause after each move
+        }
     }
 
 }
