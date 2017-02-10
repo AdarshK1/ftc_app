@@ -72,8 +72,6 @@ public class RedMecanumAuto extends LinearOpMode{
             (WHEEL_DIAMETER_INCHES * 3.1415);
     static final double     DRIVE_SPEED             = 1;
 
-
-
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -125,11 +123,6 @@ public class RedMecanumAuto extends LinearOpMode{
         bld = hardwareMap.dcMotor.get("bld");
         frd = hardwareMap.dcMotor.get("frd");
         fld = hardwareMap.dcMotor.get("fld");
-//        motorArray.add(fld);
-//        motorArray.add(bld);
-//        motorArray.add(frd);
-//        motorArray.add(brd);
-
 
         odsVal.add(odsLeft.getLightDetected());
         odsVal.add(odsRight.getLightDetected());
@@ -159,10 +152,7 @@ public class RedMecanumAuto extends LinearOpMode{
         odsVal.add(odsLeft.getLightDetected());
         odsVal.add(odsRight.getLightDetected());
         sleep(250);
-//
-//        /******* Flip out cap ball thing *******/
-//        flip.setPosition(Servo.MIN_POSITION);
-//        sleep(5000);
+
 
         /******** Shoot two balls ********/
         shooter(10);
@@ -184,7 +174,7 @@ public class RedMecanumAuto extends LinearOpMode{
         brd.setPower(-DRIVE_SPEED);
         bld.setPower(DRIVE_SPEED);
 
-        while (leftRange.getDistance(DistanceUnit.CM) > 25){
+        while (leftRange.getDistance(DistanceUnit.CM) > 30){
             telemetry.addData("Range Sensor: ", leftRange.getDistance(DistanceUnit.CM));
             telemetry.update();
             sleep(50);
@@ -212,8 +202,10 @@ public class RedMecanumAuto extends LinearOpMode{
         fld.setPower(DRIVE_SPEED / 6);
         brd.setPower(DRIVE_SPEED / 6);
         bld.setPower(DRIVE_SPEED / 6);
+        double ODStimeout = 5.0;
 
-        while ((!rightHit && !leftHit) || (!rightHit && leftHit) || (rightHit && !leftHit)){
+        runtime.reset();
+        while (((!rightHit && !leftHit) || (!rightHit && leftHit) || (rightHit && !leftHit)) && (runtime.seconds() < ODStimeout ) ){
 
             telemetry.addData("Left ODS: ", odsLeft.getLightDetected());
             telemetry.addData("Right ODS: ", odsRight.getLightDetected());
@@ -234,12 +226,12 @@ public class RedMecanumAuto extends LinearOpMode{
         stopMotors();
 
         /******** Align using Gyro for Beacon Pushing ********/
-
+        sleep(5000);
         double curr_yaw = navx_device.getYaw();
 
         telemetry.addData("Current Yaw: ", curr_yaw);
         telemetry.update();
-
+        sleep(5000);
         while (Math.abs(curr_yaw) > .5){
             if (curr_yaw > 0){
                 frd.setPower(DRIVE_SPEED / 6);
@@ -259,141 +251,160 @@ public class RedMecanumAuto extends LinearOpMode{
         stopMotors();
         sleep(1000);
 
-        /******** Push the beacon *******/
+        /******** Strafe closer to the beacon *******/
+        frd.setPower(DRIVE_SPEED / 2);
+        fld.setPower(-DRIVE_SPEED / 2);
+        brd.setPower(-DRIVE_SPEED / 2);
+        bld.setPower(DRIVE_SPEED / 2);
 
-        /******** Forward and then to the vicinity of the second line  *******/
-        frd.setPower(DRIVE_SPEED / 4);
-        fld.setPower(DRIVE_SPEED / 4);
-        brd.setPower(DRIVE_SPEED / 4);
-        bld.setPower(DRIVE_SPEED / 4);
-        sleep(250);
-
-        encoderDrive(DRIVE_SPEED, 40, 40, 8, true);
-
-
-        /******* Align to the second white line *********/
-        frd.setPower(DRIVE_SPEED / 6);
-        fld.setPower(DRIVE_SPEED / 6);
-        brd.setPower(DRIVE_SPEED / 6);
-        bld.setPower(DRIVE_SPEED / 6);
-        rightHit = false;
-        leftHit = false;
-
-        while ((!rightHit && !leftHit) || (!rightHit && leftHit) || (rightHit && !leftHit)){
-
-            telemetry.addData("Left ODS: ", odsLeft.getLightDetected());
-            telemetry.addData("Right ODS: ", odsRight.getLightDetected());
+        while (leftRange.getDistance(DistanceUnit.CM) > 15){
+            telemetry.addData("Range Sensor: ", leftRange.getDistance(DistanceUnit.CM));
             telemetry.update();
-
-            if (odsRight.getLightDetected() > (3 * avg) && rightHit != true){
-                frd.setPower(0);
-                brd.setPower(0);
-                rightHit = true;
-            }
-            if (odsLeft.getLightDetected() > (3 * avg) && leftHit != true){
-                fld.setPower(0);
-                bld.setPower(0);
-                leftHit = true;
-            }
         }
 
         stopMotors();
 
-        /******** Align using Gyro for Beacon Pushing ********/
+        encoderDrive(DRIVE_SPEED / 6, 2,2,4,true);
 
-        curr_yaw = navx_device.getYaw();
-
-        telemetry.addData("Current Yaw: ", curr_yaw);
-        telemetry.update();
-
-        while (Math.abs(curr_yaw) > .5){
-            if (curr_yaw > 0){
-                frd.setPower(DRIVE_SPEED / 6);
-                brd.setPower(DRIVE_SPEED / 6);
-                fld.setPower(0);
-                bld.setPower(0);
-            } else if (curr_yaw < 0) {
-                fld.setPower(DRIVE_SPEED / 6);
-                bld.setPower(DRIVE_SPEED / 6);
-                frd.setPower(0);
-                brd.setPower(0);
-            }
-            curr_yaw = navx_device.getYaw();
-        }
-        stopMotors();
-        sleep(1000);
-
-        /******** Push the beacon *******/
-
-        /******** Move forward so we get at the right angle to hit cap ball ********/
-        encoderDrive(DRIVE_SPEED,6,6,5, true);
-
-        /********** Turn to face the cap ball/center vortex********/
-        navx_device.zeroYaw();
-        curr_yaw = navx_device.getYaw();
-        while (Math.abs(Math.abs(curr_yaw) - 45) > 1){
-            fld.setPower(-DRIVE_SPEED / 4);
-            bld.setPower(-DRIVE_SPEED / 4);
-            frd.setPower(0);
-            brd.setPower(0);
-            telemetry.addData("Current Yaw: ", curr_yaw);
+        /******** Scan the beacon *******/
+        int reds = 0;
+        int blues = 0;
+        double totalReds = 0;
+        double totalBlues = 0;
+        for (int x = 0; x < 4; x++){
+            telemetry.addData("Red: ", sensorRGB.red());
+            telemetry.addData("Blue: ", sensorRGB.blue());
+            telemetry.addData("Green: ", sensorRGB.green());
+            telemetry.addData("Alpha: ", sensorRGB.alpha());
+            telemetry.addData("ARGB: ", sensorRGB.argb());
             telemetry.update();
-            curr_yaw = navx_device.getYaw();
+            leftBeacon.setPosition(Servo.MAX_POSITION - (x * 0.1));
+            if (sensorRGB.red() > (sensorRGB.blue() * 1.2)) {
+                reds += 1;
+                totalReds += sensorRGB.red();
+                totalBlues += sensorRGB.blue();
+                telemetry.addData("Beacon is", "Red");
+            }
+            if (sensorRGB.red() < (sensorRGB.blue() * 1.2)) {
+                blues += 1;
+                totalReds += sensorRGB.red();
+                totalBlues += sensorRGB.blue();
+                telemetry.addData("Beacon is", "Blue");
+            }
+            sleep(250);
         }
 
+        boolean unsure = false;
+        /************ Make the color decision and position servo accordingly ************/
+        if (reds >= 3 && ((totalReds/5) > (totalBlues/5))) {
+            leftBeacon.setPosition(Servo.MAX_POSITION);
+            telemetry.addData("Beacon is", "Red");
+        } else if (blues >= 3 && ((totalReds/5) < (totalBlues / 5))) {
+            telemetry.addData("Beacon is", "Blue");
+            leftBeacon.setPosition(Servo.MIN_POSITION);
+        } else {
+            telemetry.addData("Something is", "screwy");
+            unsure = true;
+        }
+
+        /******** Get 30 points!! *********/
+        while (opModeIsActive() && leftRange.getDistance(DistanceUnit.CM) > 5 && !unsure) {
+            frd.setPower(DRIVE_SPEED / 2);
+            fld.setPower(-DRIVE_SPEED / 2);
+            brd.setPower(-DRIVE_SPEED / 2);
+            bld.setPower(DRIVE_SPEED / 2);
+        }
         stopMotors();
-        /********* Charge for the ball and park ***********/
-        encoderDrive(DRIVE_SPEED,48,48,7,false);
-
-
-//        encoderDrive(DRIVE_SPEED,);
-
-//        /************ Move the servo/color sensor across the beacon ************/
-//        leftBeacon.setPosition(Servo.MAX_POSITION);
+        sleep(5000);
+//        /******** Forward and then to the vicinity of the second line  *******/
+//        frd.setPower(DRIVE_SPEED / 4);
+//        fld.setPower(DRIVE_SPEED / 4);
+//        brd.setPower(DRIVE_SPEED / 4);
+//        bld.setPower(DRIVE_SPEED / 4);
+//        sleep(250);
+//
+//        encoderDrive(DRIVE_SPEED, 40, 40, 8, true);
+//
+//
+//        /******* Align to the second white line *********/
+//        frd.setPower(DRIVE_SPEED / 6);
+//        fld.setPower(DRIVE_SPEED / 6);
+//        brd.setPower(DRIVE_SPEED / 6);
+//        bld.setPower(DRIVE_SPEED / 6);
+//        rightHit = false;
+//        leftHit = false;
+//
+//        while ((!rightHit && !leftHit) || (!rightHit && leftHit) || (rightHit && !leftHit)){
+//
+//            telemetry.addData("Left ODS: ", odsLeft.getLightDetected());
+//            telemetry.addData("Right ODS: ", odsRight.getLightDetected());
+//            telemetry.update();
+//
+//            if (odsRight.getLightDetected() > (3 * avg) && rightHit != true){
+//                frd.setPower(0);
+//                brd.setPower(0);
+//                rightHit = true;
+//            }
+//            if (odsLeft.getLightDetected() > (3 * avg) && leftHit != true){
+//                fld.setPower(0);
+//                bld.setPower(0);
+//                leftHit = true;
+//            }
+//        }
+//
+//        stopMotors();
+//
+//        /******** Align using Gyro for Beacon Pushing ********/
+//
+//        curr_yaw = navx_device.getYaw();
+//
+//        telemetry.addData("Current Yaw: ", curr_yaw);
+//        telemetry.update();
+//
+//        while (Math.abs(curr_yaw) > .5){
+//            if (curr_yaw > 0){
+//                frd.setPower(DRIVE_SPEED / 6);
+//                brd.setPower(DRIVE_SPEED / 6);
+//                fld.setPower(0);
+//                bld.setPower(0);
+//            } else if (curr_yaw < 0) {
+//                fld.setPower(DRIVE_SPEED / 6);
+//                bld.setPower(DRIVE_SPEED / 6);
+//                frd.setPower(0);
+//                brd.setPower(0);
+//            }
+//            curr_yaw = navx_device.getYaw();
+//        }
+//        stopMotors();
 //        sleep(1000);
-//        int reds = 0;
-//        int blues = 0;
-//        for (int x = 0; x < 4; x++){
-//            leftBeacon.setPosition(Servo.MAX_POSITION - (x * 0.1) );
-//            if (sensorRGB.red() > sensorRGB.blue()) {
-//                reds += 1;
-//            }
-//            if (sensorRGB.red() < sensorRGB.blue()) {
-//                blues += 1;
-//            }
-//            sleep(500);
+//
+//        /******** Push the beacon *******/
+//
+//        /******** Move forward so we get at the right angle to hit cap ball ********/
+//        encoderDrive(DRIVE_SPEED,6,6,5, true);
+//
+//        /********** Turn to face the cap ball/center vortex********/
+//        navx_device.zeroYaw();
+//        curr_yaw = navx_device.getYaw();
+//        while (Math.abs(Math.abs(curr_yaw) - 45) > 1){
+//            fld.setPower(-DRIVE_SPEED / 4);
+//            bld.setPower(-DRIVE_SPEED / 4);
+//            frd.setPower(0);
+//            brd.setPower(0);
+//            telemetry.addData("Current Yaw: ", curr_yaw);
+//            telemetry.update();
+//            curr_yaw = navx_device.getYaw();
 //        }
 //
-//        /************ Make the color decision ************/
-//        if (reds > 2.5) {
-//            telemetry.addData("Beacon is", "Red");
-//            while (opModeIsActive() && range.getDistance(DistanceUnit.CM) > 1) {
-//                frd.setPower(DRIVE_SPEED / 4);
-//                fld.setPower(DRIVE_SPEED / 4);
-//                brd.setPower(DRIVE_SPEED / 4);
-//                bld.setPower(DRIVE_SPEED / 4);
-//            }
-//            stopMotors();
-//            sleep(250);
-//        }
-//        else if (blues > 2.5){
-//            telemetry.addData("Beacon is", "Blue");
-//            leftBeacon.setPosition(Servo.MIN_POSITION + 0.1);
-//
-//            while (opModeIsActive() && range.getDistance(DistanceUnit.CM) > 4) {
-//                frd.setPower(DRIVE_SPEED / 4);
-//                fld.setPower(DRIVE_SPEED / 4);
-//                brd.setPower(DRIVE_SPEED / 4);
-//                bld.setPower(DRIVE_SPEED / 4);
-//            }
-//            stopMotors();
-//            sleep(250);
-//        }
-//        else
-//        {
-//            //do nothing
-//            telemetry.addData("Something is", "screwy");
-//        }
+//        stopMotors();
+//        /********* Charge for the ball and park ***********/
+//        encoderDrive(DRIVE_SPEED,48,48,7,false);
+
+
+        stopMotors();
+        flip.close();
+        chamber.close();
+        leftBeacon.close();
 
     }
 

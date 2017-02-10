@@ -143,6 +143,12 @@ public class MechanumTeleOp extends OpMode{
         bld.setPower(v3);
         brd.setPower(v4);
 
+        telemetry.addData("Red: ", color.red());
+        telemetry.addData("Blue: ", color.blue());
+        telemetry.addData("Green: ", color.green());
+        telemetry.addData("Alpha: ", color.alpha());
+        telemetry.addData("ARGB: ", color.argb());
+
         telemetry.addData("Left Range: ", leftRange.getDistance(DistanceUnit.CM));
         telemetry.addData("Right Range: ", rightRange.getDistance(DistanceUnit.CM));
 
@@ -150,12 +156,6 @@ public class MechanumTeleOp extends OpMode{
         telemetry.addData("FRD Power: ", v2);
         telemetry.addData("BLD Power: ", v3);
         telemetry.addData("BRD Power: ", v4);
-
-        telemetry.addData("Red: ", color.red());
-        telemetry.addData("Blue: ", color.blue());
-        telemetry.addData("Green: ", color.green());
-        telemetry.addData("Alpha: ", color.alpha());
-        telemetry.addData("ARGB: ", color.argb());
 
         telemetry.addData("rightTrigger", gamepad1.right_trigger);
         telemetry.addData("leftTrigger", gamepad1.left_trigger);
@@ -268,7 +268,7 @@ public class MechanumTeleOp extends OpMode{
             }
 
             if (gamepad1.dpad_up) {
-                flip.setPosition(Servo.MIN_POSITION);
+                flip.setPosition(Servo.MIN_POSITION + 0.5);
             }
 
 
@@ -295,9 +295,9 @@ public class MechanumTeleOp extends OpMode{
             telemetry.update();
 
             if (gamepad1.x) {
-                lift.setPower(0.75);
+                lift.setPower(1.0);
             } else if (gamepad1.y) {
-                lift.setPower(-0.75);
+                lift.setPower(-1.0);
             }
 
             if (gamepad1.left_bumper) {
@@ -333,6 +333,11 @@ public class MechanumTeleOp extends OpMode{
         fld.setPower(0);
         brd.setPower(0);
         bld.setPower(0);
+        flip.close();
+        chamber.close();
+        servoSpinner.close();
+        release.close();
+        leftBeacon.close();
     }
 
     /*
